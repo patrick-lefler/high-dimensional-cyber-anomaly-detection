@@ -6553,6 +6553,38 @@ height: 0px !important;
 </div>
 <hr>
 <p><em>Rendered with <a href="https://quarto.org/">Quarto</a> and R. Core packages: <code>evd</code>, <code>gt</code>, <code>patchwork</code>, <code>recipes</code>, <code>scales</code>, <code>sessioninfo</code>, <code>tidyverse</code>, <code>yardstick</code></em></p>
+<div class="cell">
+<style type="text/css">
+
+.react_table {
+padding-top: 5px;
+padding-bottom: 5px;
+padding-left:5px;
+padding-right: 5px;
+max-height:600px;
+}
+.react-title {
+font-size: 1.25rem;
+font-weight: 600;
+} body { 
+font-size: 18px;
+font-weight: 400;
+}
+
+.callout,
+.callout-body,
+.callout p {
+font-size: 0.83rem !important; 
+line-height: 1.5 !important;
+}
+
+.callout-header, .callout-title {
+font-size: 0.83rem !important;
+font-weight: 600 !important;
+}
+
+</style>
+</div>
 <!-- -->
 
 </section>
@@ -7732,6 +7764,51 @@ height: 0px !important;
 <span id="cb13-724"><a href="#cb13-724" aria-hidden="true" tabindex="-1"></a>------------------------------------------------------------------------</span>
 <span id="cb13-725"><a href="#cb13-725" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-726"><a href="#cb13-726" aria-hidden="true" tabindex="-1"></a>*Rendered with [Quarto](https://quarto.org/) and R. Core packages: `evd`, `gt`, `patchwork`, `recipes`, `scales`, `sessioninfo`, `tidyverse`, `yardstick`*</span>
+<span id="cb13-727"><a href="#cb13-727" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-728"><a href="#cb13-728" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-729"><a href="#cb13-729" aria-hidden="true" tabindex="-1"></a><span class="in">```{css, echo = FALSE}</span></span>
+<span id="cb13-730"><a href="#cb13-730" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb13-731"><a href="#cb13-731" aria-hidden="true" tabindex="-1"></a><span class="co">/*  CSS - Styles for the main-table container, title, and subtitle */</span></span>
+<span id="cb13-732"><a href="#cb13-732" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-733"><a href="#cb13-733" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span><span class="fu">react_table</span> <span class="op">{</span></span>
+<span id="cb13-734"><a href="#cb13-734" aria-hidden="true" tabindex="-1"></a>  padding<span class="op">-</span>top<span class="op">:</span> <span class="dv">5</span>px<span class="op">;</span></span>
+<span id="cb13-735"><a href="#cb13-735" aria-hidden="true" tabindex="-1"></a>  padding<span class="op">-</span>bottom<span class="op">:</span> <span class="dv">5</span>px<span class="op">;</span></span>
+<span id="cb13-736"><a href="#cb13-736" aria-hidden="true" tabindex="-1"></a>  padding<span class="op">-</span>left<span class="op">:</span><span class="dv">5</span>px<span class="op">;</span></span>
+<span id="cb13-737"><a href="#cb13-737" aria-hidden="true" tabindex="-1"></a>  padding<span class="op">-</span>right<span class="op">:</span> <span class="dv">5</span>px<span class="op">;</span></span>
+<span id="cb13-738"><a href="#cb13-738" aria-hidden="true" tabindex="-1"></a>  max<span class="op">-</span>height<span class="op">:</span><span class="dv">600</span>px<span class="op">;</span></span>
+<span id="cb13-739"><a href="#cb13-739" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb13-740"><a href="#cb13-740" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-741"><a href="#cb13-741" aria-hidden="true" tabindex="-1"></a><span class="op">.</span><span class="fu">react</span><span class="op">-</span>title <span class="op">{</span></span>
+<span id="cb13-742"><a href="#cb13-742" aria-hidden="true" tabindex="-1"></a>  font<span class="op">-</span>size<span class="op">:</span> <span class="fl">1.25</span>rem<span class="op">;</span></span>
+<span id="cb13-743"><a href="#cb13-743" aria-hidden="true" tabindex="-1"></a>  font<span class="op">-</span>weight<span class="op">:</span> <span class="dv">600</span><span class="op">;</span></span>
+<span id="cb13-744"><a href="#cb13-744" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> </span>
+<span id="cb13-745"><a href="#cb13-745" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-746"><a href="#cb13-746" aria-hidden="true" tabindex="-1"></a>body <span class="op">{</span>      <span class="co">/* default css for document body: includes table if column fontSize not selected */</span></span>
+<span id="cb13-747"><a href="#cb13-747" aria-hidden="true" tabindex="-1"></a>    font<span class="op">-</span>size<span class="op">:</span> <span class="dv">18</span>px<span class="op">;</span></span>
+<span id="cb13-748"><a href="#cb13-748" aria-hidden="true" tabindex="-1"></a>    font<span class="op">-</span>weight<span class="op">:</span> <span class="dv">400</span><span class="op">;</span></span>
+<span id="cb13-749"><a href="#cb13-749" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-750"><a href="#cb13-750" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb13-751"><a href="#cb13-751" aria-hidden="true" tabindex="-1"></a><span class="co">/* Normalize callout notes to match standard body text */</span></span>
+<span id="cb13-752"><a href="#cb13-752" aria-hidden="true" tabindex="-1"></a><span class="op">.</span><span class="fu">callout</span><span class="op">,</span></span>
+<span id="cb13-753"><a href="#cb13-753" aria-hidden="true" tabindex="-1"></a><span class="op">.</span><span class="fu">callout</span><span class="op">-</span>body<span class="op">,</span></span>
+<span id="cb13-754"><a href="#cb13-754" aria-hidden="true" tabindex="-1"></a><span class="op">.</span><span class="fu">callout</span> p <span class="op">{</span></span>
+<span id="cb13-755"><a href="#cb13-755" aria-hidden="true" tabindex="-1"></a>  font<span class="op">-</span>size<span class="op">:</span> <span class="fl">0.83</span>rem <span class="op">!</span>important<span class="op">;</span> <span class="co">/* or 14px */</span></span>
+<span id="cb13-756"><a href="#cb13-756" aria-hidden="true" tabindex="-1"></a>  line<span class="op">-</span>height<span class="op">:</span> <span class="fl">1.5</span> <span class="op">!</span>important<span class="op">;</span></span>
+<span id="cb13-757"><a href="#cb13-757" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-758"><a href="#cb13-758" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-759"><a href="#cb13-759" aria-hidden="true" tabindex="-1"></a><span class="co">/* Ensure callout titles are proportional and not oversized */</span></span>
+<span id="cb13-760"><a href="#cb13-760" aria-hidden="true" tabindex="-1"></a><span class="op">.</span><span class="fu">callout</span><span class="op">-</span>header<span class="op">,</span> </span>
+<span id="cb13-761"><a href="#cb13-761" aria-hidden="true" tabindex="-1"></a><span class="op">.</span><span class="fu">callout</span><span class="op">-</span>title <span class="op">{</span></span>
+<span id="cb13-762"><a href="#cb13-762" aria-hidden="true" tabindex="-1"></a>  font<span class="op">-</span>size<span class="op">:</span> <span class="fl">0.83</span>rem <span class="op">!</span>important<span class="op">;</span></span>
+<span id="cb13-763"><a href="#cb13-763" aria-hidden="true" tabindex="-1"></a>  font<span class="op">-</span>weight<span class="op">:</span> <span class="dv">600</span> <span class="op">!</span>important<span class="op">;</span></span>
+<span id="cb13-764"><a href="#cb13-764" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-765"><a href="#cb13-765" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb13-766"><a href="#cb13-766" aria-hidden="true" tabindex="-1"></a><span class="co">/* css web colors red: #ff0000  blue: #0000ff  green: #008000 white: #ffffff</span></span>
+<span id="cb13-767"><a href="#cb13-767" aria-hidden="true" tabindex="-1"></a><span class="co">  gray: #808080  Black: #000000 yellow: #ffff00 navy: #000080</span></span>
+<span id="cb13-768"><a href="#cb13-768" aria-hidden="true" tabindex="-1"></a><span class="co">  Gainsboro: #dcdcdc, MediumSeaGreen: #3cb371, Orange: #ffa500, Tomato: #ff6347,</span></span>
+<span id="cb13-769"><a href="#cb13-769" aria-hidden="true" tabindex="-1"></a><span class="co">  LightGray: #d3d3d3 */</span></span>
+<span id="cb13-770"><a href="#cb13-770" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb13-771"><a href="#cb13-771" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 </code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal><i class="bi"></i></button></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
