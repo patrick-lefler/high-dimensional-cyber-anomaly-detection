@@ -6,7 +6,7 @@ Author: Patrick Lefler
 
 Published: 2026-08-12 
 
-GitHub Link: https://patrick-lefler.github.io/rQuarto_high-dimensional_cyber_anomaly_detection_and_risk_modeling_2026-08-13/
+GitHub Link: https://patrick-lefler.com/high-dimensional-cyber-anomaly-detection
 
 ### Project Introduction
 
