@@ -1,9 +1,6 @@
 ---
 title: "Evaluation"
 subtitle: "Cyber Anomaly Detection & Dependency Risk: detection, baselines, robustness across seeds, base rates, attribution, and drift"
-author: Patrick Lefler
-date: "2026-08-13"
-date-modified: "2026-11-18"
 ---
 
 ```{r}
