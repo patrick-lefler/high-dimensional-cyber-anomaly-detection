@@ -1,0 +1,94 @@
+# Every value below is a modelling assumption for the synthetic study, not an
+# estimate from real telemetry. Ranges are [min, max] of a uniform draw.
+
+seeds:
+  main: 42                 # seed for the main run shown in the plots
+  robustness: 30           # seeds 1..30 for the multi-seed robustness study
+
+simulation:
+  start_date: "2026-01-05" # a Monday, so day 1 is a weekday
+  window_minutes: 5        # one row = one host x 5-minute window
+  n_days: 14
+  hosts_train: 4           # 4 x 14 days x 288 windows = 16,128 rows
+  hosts_val: 4             # held-out normal windows for threshold fitting
+  hosts_test: 2            # clean normal windows in the test set
+  hosts_attack_pool: 4     # normal windows that attacks are injected into
+  ar_phi: 0.5              # AR(1) persistence of every latent factor
+  diurnal_amplitude: 2.5   # size of the business-hours bump in activity
+  diurnal_peak_hour: 13
+  diurnal_width_hours: 3
+  weekend_activity: 0.3    # weekend bump as a share of a weekday bump
+  n_attacks_per_cell: 150  # per attack type x intensity tier
+
+attacks:
+  data_exfiltration:
+    label: "Data Exfiltration"
+    low:    {bytes_mult: [1.5, 3.0], tls_mult: [1.5, 3.0], entropy_mult: [0.7, 0.9]}
+    medium: {bytes_mult: [5, 10],    tls_mult: [5, 10],    entropy_mult: [0.7, 0.9]}
+    high:   {bytes_mult: [25, 60],   tls_mult: [8, 20],    entropy_mult: [0.7, 0.9]}
+  credential_stuffing:
+    label: "Credential Stuffing"
+    low:    {ips_add: 4,  ips_pois: 2,  fails_add: 1, fails_pois: 1}
+    medium: {ips_add: 15, ips_pois: 5,  fails_add: 3, fails_pois: 2}
+    high:   {ips_add: 0,  ips_pois: 80, fails_add: 0, fails_pois: 45}
+  privilege_escalation:
+    label: "Privilege Escalation"
+    low:    {priv_add: 1}
+    medium: {priv_add: 2}
+    high:   {priv_add: 4}
+  ransomware_staging:
+    label: "Ransomware Staging"
+    low:    {child_add: 3,  child_pois: 2,  fs_add: 6,  fs_pois: 3,  dns_mult: [1.2, 1.6]}
+    medium: {child_add: 12, child_pois: 5,  fs_add: 20, fs_pois: 10, dns_mult: [2, 4]}
+    high:   {child_add: 0,  child_pois: 35, fs_add: 0,  fs_pois: 60, dns_mult: [4, 10]}
+  lateral_movement:
+    label: "Lateral Movement"
+    low:    {dest_add: 1,  dest_pois: 1, smb_add: 2,  smb_pois: 1,  svc_add: 0, svc_prob: 0.3}
+    medium: {dest_add: 3,  dest_pois: 2, smb_add: 6,  smb_pois: 3,  svc_add: 1, svc_prob: 0}
+    high:   {dest_add: 10, dest_pois: 5, smb_add: 20, smb_pois: 10, svc_add: 3, svc_prob: 0}
+
+low_and_slow:
+  label: "Low-and-Slow Exfiltration"
+  n_campaigns: 30
+  length: [12, 48]          # consecutive 5-minute windows per campaign (1-4 hours)
+  bytes_mult: [1.5, 3.0]
+  tls_mult: [1.2, 2.0]
+  entropy_mult: [0.7, 0.9]
+
+autoencoder:
+  bottleneck: 4
+  max_epochs: 60
+  patience: 5               # early stopping on validation loss
+  batch_size: 256
+  lr: 0.005
+  sweep_bottleneck: [2, 4, 8]
+  deep_hidden: 8            # second architecture: d-8-4-8-d
+
+evt:
+  u_prob: 0.95              # POT threshold u = 95th percentile of held-out losses
+  q: [0.99, 0.999, 0.9999, 0.99999]
+  bootstrap_B: 1000
+  decluster_run_length: 3   # runs method: exceedances within 3 windows = one cluster
+  min_empirical_exceedances: 10
+
+operations:
+  windows_per_day: 1000000  # assumed scoring volume of a large SOC
+  prevalence: [1.0e-5, 1.0e-4, 1.0e-3]
+
+graph:
+  damping: 0.85
+  damping_sensitivity: [0.75, 0.85, 0.95]
+  tol: 1.0e-12
+  max_iter: 1000
+  tier1_removal_impact: 0.5    # policy choice: Tier 1 if removal cuts off >= 50% of services
+  seed: 7
+
+drift:
+  week_hosts: 100           # 100 hosts x 7 days = production-scale weekly sample
+  week_days: 7
+  material_shift_sd: 0.3
+  harmless_shift_sd: 0.05
+  shifted_features: ["net_bytes_out_kb", "host_cpu_utilization"]
+  psi_watch: 0.1
+  psi_alert: 0.2
+  ks_alpha: 0.01

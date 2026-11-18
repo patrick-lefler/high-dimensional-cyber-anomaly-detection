@@ -1,2 +1,4 @@
 /.quarto/
 **/*.quarto_ipynb
+/results/
+.DS_Store
