@@ -1,9 +1,6 @@
 ---
 title: "Alert Thresholds: Extreme Value Theory"
 subtitle: "Cyber Anomaly Detection & Dependency Risk: peaks-over-threshold fitting, uncertainty, diagnostics, and calibration"
-author: Patrick Lefler
-date: "2026-08-13"
-date-modified: "2026-11-18"
 ---
 
 ```{r}

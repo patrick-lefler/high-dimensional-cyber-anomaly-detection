@@ -1,9 +1,6 @@
 ---
 title: "Detector: Simulation & Shallow Autoencoder"
 subtitle: "Cyber Anomaly Detection & Dependency Risk: synthetic telemetry, attack scenarios, and a base-R autoencoder"
-author: Patrick Lefler
-date: "2026-08-13"
-date-modified: "2026-11-18"
 ---
 
 ```{r}

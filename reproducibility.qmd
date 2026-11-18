@@ -1,8 +1,6 @@
 ---
 title: "Reproducibility"
 subtitle: "Cyber Anomaly Detection & Dependency Risk: how to rerun the analysis and check you got the same results"
-author: Patrick Lefler
-date: "2026-11-18"
 ---
 
 ```{r}

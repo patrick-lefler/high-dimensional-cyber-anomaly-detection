@@ -1,9 +1,6 @@
 ---
 title: "Service Dependency Graph"
 subtitle: "Cyber Anomaly Detection & Dependency Risk: Markov transition matrix, PageRank, and single-point-of-failure analysis"
-author: Patrick Lefler
-date: "2026-08-13"
-date-modified: "2026-11-18"
 ---
 
 ```{r}
