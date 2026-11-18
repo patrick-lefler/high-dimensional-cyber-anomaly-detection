@@ -187,6 +187,12 @@ window.Quarto = {
  <span class="menu-text">Evaluation</span></a>
   </div>
 </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./reproducibility.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Reproducibility</span></a>
+  </div>
+</li>
     </ul>
     </div>
 </nav>
@@ -197,14 +203,12 @@ window.Quarto = {
     <h2 id="toc-title">Contents</h2>
    
   <ul>
-  <li><a href="#abstract" id="toc-abstract" class="nav-link active" data-scroll-target="#abstract">Abstract</a></li>
-  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">Introduction</a></li>
   <li><a href="#techniques" id="toc-techniques" class="nav-link" data-scroll-target="#techniques">Techniques</a></li>
   <li><a href="#architecture" id="toc-architecture" class="nav-link" data-scroll-target="#architecture">Architecture</a></li>
   <li><a href="#headline-results" id="toc-headline-results" class="nav-link" data-scroll-target="#headline-results">Headline results</a></li>
   <li><a href="#recommendations" id="toc-recommendations" class="nav-link" data-scroll-target="#recommendations">Recommendations</a></li>
   <li><a href="#limitations" id="toc-limitations" class="nav-link" data-scroll-target="#limitations">Limitations</a></li>
-  <li><a href="#what-changed-from-the-original-version" id="toc-what-changed-from-the-original-version" class="nav-link" data-scroll-target="#what-changed-from-the-original-version">What changed from the original version</a></li>
   <li><a href="#reproducibility" id="toc-reproducibility" class="nav-link" data-scroll-target="#reproducibility">Reproducibility</a></li>
   </ul>
 </nav>
@@ -236,12 +240,6 @@ window.Quarto = {
     </div>
   </div>
   
-    <div>
-    <div class="quarto-title-meta-heading">Modified</div>
-    <div class="quarto-title-meta-contents">
-      <p class="date-modified">November 18, 2026</p>
-    </div>
-  </div>
     
   </div>
   
@@ -250,9 +248,10 @@ window.Quarto = {
 </header>
 
 
-<section id="abstract" class="level2">
-<h2 class="anchored" data-anchor-id="abstract">Abstract</h2>
-<p>Signature rules and fixed thresholds miss attacks that stay inside normal ranges. This project tests a two-layer alternative, built in R, on <strong>simulated</strong> enterprise telemetry.</p>
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>Enterprise systems produce large volumes of authentication, network and host telemetry. Most monitoring still relies on fixed signatures and static thresholds, which miss attacks that stay inside normal ranges. Credential stuffing spread across many sources and slow data exfiltration are examples. An unsupervised detector learns what normal looks like and flags departures from it, so it can in principle catch attacks nobody has written a rule for.</p>
+<p>Detection alone is not enough. The usual response to an alert is containment: isolate a host, revoke a token. If the affected service sits under much of the estate, the containment can cause a larger outage than the attack. This project therefore tests a two-layer design, built in R, on <strong>simulated</strong> enterprise telemetry. Together the layers answer two questions: <em>is this window abnormal?</em> and <em>how dangerous is it to act on that automatically?</em></p>
 <p><strong>The structural layer</strong> models 23 services as a Markov transition matrix of call flows. It ranks them by PageRank, articulation points and a node-removal simulation, and turns the ranking into criticality tiers that decide which alerts may trigger automated containment.</p>
 <p><strong>The detection layer</strong> is a shallow autoencoder, written in base R with analytic gradients and Adam. It is trained on 19 correlated, seasonal telemetry features. Alerts fire when reconstruction loss exceeds a threshold fitted to the loss tail with a Generalized Pareto Distribution on held-out hosts.</p>
 <p><strong>Results.</strong> Across 30 independent seeds (mean [95% range]):</p>
@@ -264,12 +263,6 @@ window.Quarto = {
 <li>The loss tail is heavy (shape ξ = 0.24 [0.10–0.38]), driven by rare benign count spikes.</li>
 </ul>
 <p>The two-layer design is sound. The detector, as built, is not ready for automated response.</p>
-<p>These results come from simulated data and injected attacks, not production telemetry. They show how the method behaves, not how it would perform in a real enterprise.</p>
-</section>
-<section id="introduction" class="level2">
-<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
-<p>Enterprise systems produce large volumes of authentication, network and host telemetry. Most monitoring still relies on fixed signatures and static thresholds, which miss attacks that stay inside normal ranges. Credential stuffing spread across many sources and slow data exfiltration are examples. An unsupervised detector learns what normal looks like and flags departures from it, so it can in principle catch attacks nobody has written a rule for.</p>
-<p>Detection alone is not enough. The usual response to an alert is containment: isolate a host, revoke a token. If the affected service sits under much of the estate, the containment can cause a larger outage than the attack. This project therefore pairs the detector with a structural model of service dependencies. Together they answer two questions: <em>is this window abnormal?</em> and <em>how dangerous is it to act on that automatically?</em></p>
 <div class="callout callout-style-default callout-warning callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -280,7 +273,7 @@ window.Quarto = {
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Every number on this site comes from a simulation with assumed parameters (<code>params.yaml</code>). The results show how the methods behave under controlled conditions. They do not estimate how the system would perform on any real network.</p>
+<p>Every number on this site comes from a simulation with assumed parameters (<code>params.yaml</code>) and injected attacks, not production telemetry. The results show how the methods behave under controlled conditions. They do not estimate how the system would perform on any real network.</p>
 </div>
 </div>
 </section>
@@ -377,23 +370,23 @@ Table&nbsp;1
 </figcaption>
 <div aria-describedby="tbl-headline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="cell-output-display">
-<div id="fdxauurtqb" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
-<style>#fdxauurtqb table {
+<div id="ccrmpfltpb" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#ccrmpfltpb table {
   font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-#fdxauurtqb thead, #fdxauurtqb tbody, #fdxauurtqb tfoot, #fdxauurtqb tr, #fdxauurtqb td, #fdxauurtqb th {
+#ccrmpfltpb thead, #ccrmpfltpb tbody, #ccrmpfltpb tfoot, #ccrmpfltpb tr, #ccrmpfltpb td, #ccrmpfltpb th {
   border-style: none;
 }
 
-#fdxauurtqb p {
+#ccrmpfltpb p {
   margin: 0;
   padding: 0;
 }
 
-#fdxauurtqb .gt_table {
+#ccrmpfltpb .gt_table {
   display: table;
   border-collapse: collapse;
   line-height: normal;
@@ -419,12 +412,12 @@ Table&nbsp;1
   border-left-color: #D3D3D3;
 }
 
-#fdxauurtqb .gt_caption {
+#ccrmpfltpb .gt_caption {
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-#fdxauurtqb .gt_title {
+#ccrmpfltpb .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -436,7 +429,7 @@ Table&nbsp;1
   border-bottom-width: 0;
 }
 
-#fdxauurtqb .gt_subtitle {
+#ccrmpfltpb .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -448,7 +441,7 @@ Table&nbsp;1
   border-top-width: 0;
 }
 
-#fdxauurtqb .gt_heading {
+#ccrmpfltpb .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -460,13 +453,13 @@ Table&nbsp;1
   border-right-color: #D3D3D3;
 }
 
-#fdxauurtqb .gt_bottom_border {
+#ccrmpfltpb .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#fdxauurtqb .gt_col_headings {
+#ccrmpfltpb .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -481,7 +474,7 @@ Table&nbsp;1
   border-right-color: #D3D3D3;
 }
 
-#fdxauurtqb .gt_col_heading {
+#ccrmpfltpb .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -501,7 +494,7 @@ Table&nbsp;1
   overflow-x: hidden;
 }
 
-#fdxauurtqb .gt_column_spanner_outer {
+#ccrmpfltpb .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -513,15 +506,15 @@ Table&nbsp;1
   padding-right: 4px;
 }
 
-#fdxauurtqb .gt_column_spanner_outer:first-child {
+#ccrmpfltpb .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#fdxauurtqb .gt_column_spanner_outer:last-child {
+#ccrmpfltpb .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#fdxauurtqb .gt_column_spanner {
+#ccrmpfltpb .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -533,11 +526,11 @@ Table&nbsp;1
   width: 100%;
 }
 
-#fdxauurtqb .gt_spanner_row {
+#ccrmpfltpb .gt_spanner_row {
   border-bottom-style: hidden;
 }
 
-#fdxauurtqb .gt_group_heading {
+#ccrmpfltpb .gt_group_heading {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -563,7 +556,7 @@ Table&nbsp;1
   text-align: left;
 }
 
-#fdxauurtqb .gt_empty_group_heading {
+#ccrmpfltpb .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -578,15 +571,15 @@ Table&nbsp;1
   vertical-align: middle;
 }
 
-#fdxauurtqb .gt_from_md > :first-child {
+#ccrmpfltpb .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#fdxauurtqb .gt_from_md > :last-child {
+#ccrmpfltpb .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#fdxauurtqb .gt_row {
+#ccrmpfltpb .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -605,7 +598,7 @@ Table&nbsp;1
   overflow-x: hidden;
 }
 
-#fdxauurtqb .gt_stub {
+#ccrmpfltpb .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -618,7 +611,7 @@ Table&nbsp;1
   padding-right: 5px;
 }
 
-#fdxauurtqb .gt_stub_row_group {
+#ccrmpfltpb .gt_stub_row_group {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -632,15 +625,15 @@ Table&nbsp;1
   vertical-align: top;
 }
 
-#fdxauurtqb .gt_row_group_first td {
+#ccrmpfltpb .gt_row_group_first td {
   border-top-width: 2px;
 }
 
-#fdxauurtqb .gt_row_group_first th {
+#ccrmpfltpb .gt_row_group_first th {
   border-top-width: 2px;
 }
 
-#fdxauurtqb .gt_summary_row {
+#ccrmpfltpb .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -650,16 +643,16 @@ Table&nbsp;1
   padding-right: 5px;
 }
 
-#fdxauurtqb .gt_first_summary_row {
+#ccrmpfltpb .gt_first_summary_row {
   border-top-style: solid;
   border-top-color: #D3D3D3;
 }
 
-#fdxauurtqb .gt_first_summary_row.thick {
+#ccrmpfltpb .gt_first_summary_row.thick {
   border-top-width: 2px;
 }
 
-#fdxauurtqb .gt_last_summary_row {
+#ccrmpfltpb .gt_last_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -669,7 +662,7 @@ Table&nbsp;1
   border-bottom-color: #D3D3D3;
 }
 
-#fdxauurtqb .gt_grand_summary_row {
+#ccrmpfltpb .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -679,7 +672,7 @@ Table&nbsp;1
   padding-right: 5px;
 }
 
-#fdxauurtqb .gt_first_grand_summary_row {
+#ccrmpfltpb .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -689,7 +682,7 @@ Table&nbsp;1
   border-top-color: #D3D3D3;
 }
 
-#fdxauurtqb .gt_last_grand_summary_row_top {
+#ccrmpfltpb .gt_last_grand_summary_row_top {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -699,11 +692,11 @@ Table&nbsp;1
   border-bottom-color: #D3D3D3;
 }
 
-#fdxauurtqb .gt_striped {
+#ccrmpfltpb .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#fdxauurtqb .gt_table_body {
+#ccrmpfltpb .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -712,7 +705,7 @@ Table&nbsp;1
   border-bottom-color: #D3D3D3;
 }
 
-#fdxauurtqb .gt_footnotes {
+#ccrmpfltpb .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -726,7 +719,7 @@ Table&nbsp;1
   border-right-color: #D3D3D3;
 }
 
-#fdxauurtqb .gt_footnote {
+#ccrmpfltpb .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding-top: 4px;
@@ -735,7 +728,7 @@ Table&nbsp;1
   padding-right: 5px;
 }
 
-#fdxauurtqb .gt_sourcenotes {
+#ccrmpfltpb .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -749,7 +742,7 @@ Table&nbsp;1
   border-right-color: #D3D3D3;
 }
 
-#fdxauurtqb .gt_sourcenote {
+#ccrmpfltpb .gt_sourcenote {
   font-size: 90%;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -757,72 +750,72 @@ Table&nbsp;1
   padding-right: 5px;
 }
 
-#fdxauurtqb .gt_left {
+#ccrmpfltpb .gt_left {
   text-align: left;
 }
 
-#fdxauurtqb .gt_center {
+#ccrmpfltpb .gt_center {
   text-align: center;
 }
 
-#fdxauurtqb .gt_right {
+#ccrmpfltpb .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#fdxauurtqb .gt_font_normal {
+#ccrmpfltpb .gt_font_normal {
   font-weight: normal;
 }
 
-#fdxauurtqb .gt_font_bold {
+#ccrmpfltpb .gt_font_bold {
   font-weight: bold;
 }
 
-#fdxauurtqb .gt_font_italic {
+#ccrmpfltpb .gt_font_italic {
   font-style: italic;
 }
 
-#fdxauurtqb .gt_super {
+#ccrmpfltpb .gt_super {
   font-size: 65%;
 }
 
-#fdxauurtqb .gt_footnote_marks {
+#ccrmpfltpb .gt_footnote_marks {
   font-size: 75%;
   vertical-align: 0.4em;
   position: initial;
 }
 
-#fdxauurtqb .gt_asterisk {
+#ccrmpfltpb .gt_asterisk {
   font-size: 100%;
   vertical-align: 0;
 }
 
-#fdxauurtqb .gt_indent_1 {
+#ccrmpfltpb .gt_indent_1 {
   text-indent: 5px;
 }
 
-#fdxauurtqb .gt_indent_2 {
+#ccrmpfltpb .gt_indent_2 {
   text-indent: 10px;
 }
 
-#fdxauurtqb .gt_indent_3 {
+#ccrmpfltpb .gt_indent_3 {
   text-indent: 15px;
 }
 
-#fdxauurtqb .gt_indent_4 {
+#ccrmpfltpb .gt_indent_4 {
   text-indent: 20px;
 }
 
-#fdxauurtqb .gt_indent_5 {
+#ccrmpfltpb .gt_indent_5 {
   text-indent: 25px;
 }
 
-#fdxauurtqb .katex-display {
+#ccrmpfltpb .katex-display {
   display: inline-flex !important;
   margin-bottom: 0.75em !important;
 }
 
-#fdxauurtqb div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+#ccrmpfltpb div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
   height: 0px !important;
 }
 </style>
@@ -936,128 +929,9 @@ Table&nbsp;1
 <li><strong>Prevalence.</strong> The test set is about 28% attacks. Real environments are orders of magnitude lower, which is why the base-rate table matters more than the ROC curve.</li>
 </ul>
 </section>
-<section id="what-changed-from-the-original-version" class="level2">
-<h2 class="anchored" data-anchor-id="what-changed-from-the-original-version">What changed from the original version</h2>
-<p>An independent review found that the original single-page report:</p>
-<ul>
-<li>advertised a Markov/PageRank layer it never built;</li>
-<li>simulated independent features (so the 0.75 loss plateau was a mathematical floor, not learning);</li>
-<li>used attacks pushed far outside normal ranges;</li>
-<li>reported single-seed results with no uncertainty.</li>
-</ul>
-<p>This version builds the dependency layer and adds correlated, seasonal data with three attack intensities. The detector is compared against baselines over 30 seeds. The EVT threshold is fitted on held-out hosts, with diagnostics and calibration tests. The headline results changed accordingly.</p>
-</section>
 <section id="reproducibility" class="level2">
 <h2 class="anchored" data-anchor-id="reproducibility">Reproducibility</h2>
-<ol type="1">
-<li>Install packages with <code>pak</code> (see the session information below). Package versions are not pinned with <code>renv</code>, so the session information below is the record of what produced these results.</li>
-<li>Run <code>Rscript run_all.R</code> from the project root. It regenerates every result in <code>results/</code> in under a minute.</li>
-<li>Run <code>Rscript -e 'testthat::test_dir("tests/testthat")'</code> for the unit tests: GPD threshold including <span class="math inline">\(\xi = 0\)</span>, gradient check, transition matrix and PageRank, removal impact, drift metrics, AUC, and the simulator.</li>
-<li>Run <code>quarto render</code>. Pages read the cached results. Because <code>freeze: auto</code> is on, delete <code>_freeze/</code> after re-running <code>run_all.R</code> so every page re-executes.</li>
-</ol>
-<p>All parameters and seeds are in <code>params.yaml</code>: main seed 42, robustness seeds 1–30, graph seed 7. Each seeded run is deterministic and does not depend on the number of parallel workers.</p>
-<div class="callout callout-style-default callout-note no-icon callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span>Session information
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-2" class="callout-2-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>#&gt; ─ Session info ───────────────────────────────────────────────────────────────
-#&gt;  setting  value
-#&gt;  version  R version 4.5.2 (2025-10-31)
-#&gt;  os       macOS Tahoe 26.6.2
-#&gt;  system   aarch64, darwin20
-#&gt;  ui       X11
-#&gt;  language (EN)
-#&gt;  collate  C.UTF-8
-#&gt;  ctype    C.UTF-8
-#&gt;  tz       America/New_York
-#&gt;  date     2026-11-18
-#&gt;  pandoc   3.6.3 @ /Applications/quarto/bin/tools/ (via rmarkdown)
-#&gt;  quarto   1.8.26 @ /usr/local/bin/quarto
-#&gt; 
-#&gt; ─ Packages ───────────────────────────────────────────────────────────────────
-#&gt;  package      * version date (UTC) lib source
-#&gt;  cachem         1.1.0   2024-05-16 [1] CRAN (R 4.5.0)
-#&gt;  cli            3.6.6   2026-04-09 [1] CRAN (R 4.5.2)
-#&gt;  digest         0.6.39  2025-11-19 [1] CRAN (R 4.5.2)
-#&gt;  dplyr        * 1.2.1   2026-04-03 [1] CRAN (R 4.5.2)
-#&gt;  evaluate       1.0.5   2025-08-27 [1] CRAN (R 4.5.0)
-#&gt;  farver         2.1.2   2024-05-13 [1] CRAN (R 4.5.0)
-#&gt;  fastmap        1.2.0   2024-05-15 [1] CRAN (R 4.5.0)
-#&gt;  forcats      * 1.0.1   2025-09-25 [1] CRAN (R 4.5.0)
-#&gt;  fs             2.1.0   2026-04-18 [1] CRAN (R 4.5.2)
-#&gt;  generics       0.1.4   2025-05-09 [1] CRAN (R 4.5.0)
-#&gt;  ggforce        0.5.0   2025-06-18 [1] CRAN (R 4.5.0)
-#&gt;  ggplot2      * 4.0.3   2026-04-22 [1] CRAN (R 4.5.2)
-#&gt;  ggraph       * 2.2.2   2025-08-24 [1] CRAN (R 4.5.0)
-#&gt;  ggrepel        0.9.8   2026-03-17 [1] CRAN (R 4.5.2)
-#&gt;  glue           1.8.1   2026-04-17 [1] CRAN (R 4.5.2)
-#&gt;  graphlayouts   1.2.3   2026-02-21 [1] CRAN (R 4.5.2)
-#&gt;  gridExtra      2.3     2017-09-09 [1] CRAN (R 4.5.0)
-#&gt;  gt           * 1.3.0   2026-01-22 [1] CRAN (R 4.5.2)
-#&gt;  gtable         0.3.6   2024-10-25 [1] CRAN (R 4.5.0)
-#&gt;  hms            1.1.4   2025-10-17 [1] CRAN (R 4.5.0)
-#&gt;  htmltools      0.5.9   2025-12-04 [1] CRAN (R 4.5.2)
-#&gt;  htmlwidgets    1.6.4   2023-12-06 [1] CRAN (R 4.5.0)
-#&gt;  igraph         2.2.1   2025-10-27 [1] CRAN (R 4.5.0)
-#&gt;  jsonlite       2.0.0   2025-03-27 [1] CRAN (R 4.5.0)
-#&gt;  knitr          1.50    2025-03-16 [1] CRAN (R 4.5.0)
-#&gt;  lifecycle      1.0.5   2026-01-08 [1] CRAN (R 4.5.2)
-#&gt;  lubridate    * 1.9.4   2024-12-08 [1] CRAN (R 4.5.0)
-#&gt;  magrittr       2.0.5   2026-04-04 [1] CRAN (R 4.5.2)
-#&gt;  MASS           7.3-65  2025-02-28 [1] CRAN (R 4.5.2)
-#&gt;  memoise        2.0.1   2021-11-26 [1] CRAN (R 4.5.0)
-#&gt;  patchwork    * 1.3.2   2025-08-25 [1] CRAN (R 4.5.0)
-#&gt;  pillar         1.11.1  2025-09-17 [1] CRAN (R 4.5.0)
-#&gt;  pkgconfig      2.0.3   2019-09-22 [1] CRAN (R 4.5.0)
-#&gt;  polyclip       1.10-7  2024-07-23 [1] CRAN (R 4.5.0)
-#&gt;  purrr        * 1.2.2   2026-04-10 [1] CRAN (R 4.5.2)
-#&gt;  R6             2.6.1   2025-02-15 [1] CRAN (R 4.5.0)
-#&gt;  RColorBrewer   1.1-3   2022-04-03 [1] CRAN (R 4.5.0)
-#&gt;  Rcpp           1.1.2   2026-07-05 [1] CRAN (R 4.5.2)
-#&gt;  readr        * 2.1.5   2024-01-10 [1] CRAN (R 4.5.0)
-#&gt;  rlang          1.3.0   2026-07-05 [1] CRAN (R 4.5.2)
-#&gt;  rmarkdown      2.30    2025-09-28 [1] CRAN (R 4.5.0)
-#&gt;  S7             0.2.2   2026-04-22 [1] CRAN (R 4.5.2)
-#&gt;  sass           0.4.10  2025-04-11 [1] CRAN (R 4.5.0)
-#&gt;  scales       * 1.4.0   2025-04-24 [1] CRAN (R 4.5.0)
-#&gt;  sessioninfo    1.2.3   2025-02-05 [1] CRAN (R 4.5.0)
-#&gt;  stringi        1.8.7   2025-03-27 [1] CRAN (R 4.5.0)
-#&gt;  stringr      * 1.6.0   2025-11-04 [1] CRAN (R 4.5.0)
-#&gt;  tibble       * 3.3.1   2026-01-11 [1] CRAN (R 4.5.2)
-#&gt;  tidygraph      1.3.1   2024-01-30 [1] CRAN (R 4.5.0)
-#&gt;  tidyr        * 1.3.1   2024-01-24 [1] CRAN (R 4.5.0)
-#&gt;  tidyselect     1.2.1   2024-03-11 [1] CRAN (R 4.5.0)
-#&gt;  tidyverse    * 2.0.0   2023-02-22 [1] CRAN (R 4.5.0)
-#&gt;  timechange     0.3.0   2024-01-18 [1] CRAN (R 4.5.0)
-#&gt;  tweenr         2.0.3   2024-02-26 [1] CRAN (R 4.5.0)
-#&gt;  tzdb           0.5.0   2025-03-15 [1] CRAN (R 4.5.0)
-#&gt;  vctrs          0.7.3   2026-04-11 [1] CRAN (R 4.5.2)
-#&gt;  viridis        0.6.5   2024-01-29 [1] CRAN (R 4.5.0)
-#&gt;  viridisLite    0.4.3   2026-02-04 [1] CRAN (R 4.5.2)
-#&gt;  withr          3.0.3   2026-06-19 [1] CRAN (R 4.5.2)
-#&gt;  xfun           0.54    2025-10-30 [1] CRAN (R 4.5.0)
-#&gt;  xml2           1.4.1   2025-10-27 [1] CRAN (R 4.5.0)
-#&gt;  yaml           2.3.10  2024-07-26 [1] CRAN (R 4.5.0)
-#&gt; 
-#&gt;  [1] /Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/library
-#&gt;  * ── Packages attached to the search path.
-#&gt; 
-#&gt; ──────────────────────────────────────────────────────────────────────────────</code></pre>
-</div>
-</div>
-</div>
-</div>
-</div>
+<p>Every result can be regenerated from <code>params.yaml</code> with one script, <code>run_all.R</code>, and package versions are pinned with <code>renv</code>. The <a href="./reproducibility.html">Reproducibility</a> page has step-by-step instructions, result fingerprints for checking a rerun, unit-test results, and the full software environment. The code is on <a href="https://github.com/patrick-lefler/high-dimensional-cyber-anomaly-detection">GitHub</a>.</p>
 
 
 <!-- -->
@@ -1525,172 +1399,139 @@ Table&nbsp;1
       </a>
   </div>
 </nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Cyber Anomaly Detection &amp; Service Dependency Risk"</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="an">subtitle:</span><span class="co"> "Markov transition matrices, PageRank, a shallow autoencoder, and Extreme Value Theory thresholds: a simulation study"</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="an">author:</span><span class="co"> Patrick Lefler</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="an">date:</span><span class="co"> "2026-08-13"</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="an">date-modified:</span><span class="co"> "2026-11-18"</span></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: setup</span></span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="co">#| include: false</span></span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"R/pages/setup.R"</span>)</span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>gt_tab <span class="ot">&lt;-</span> graph<span class="sc">$</span>table</span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>tier1 <span class="ot">&lt;-</span> gt_tab <span class="sc">|&gt;</span> <span class="fu">filter</span>(criticality_tier <span class="sc">==</span> <span class="st">"Tier 1"</span>) <span class="sc">|&gt;</span> <span class="fu">pull</span>(name)</span>
-<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>fa999 <span class="ot">&lt;-</span> <span class="fu">rob_get</span>(<span class="st">"False alarms at 99.9%"</span>)</span>
-<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>f3 <span class="ot">&lt;-</span> \(x) <span class="fu">f_num</span>(x, <span class="dv">3</span>)</span>
-<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="fu">## Abstract</span></span>
-<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>Signature rules and fixed thresholds miss attacks that stay inside normal ranges. This project tests a two-layer alternative, built in R, on **simulated** enterprise telemetry.</span>
-<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>**The structural layer** models <span class="in">`r nrow(gt_tab)`</span> services as a Markov transition matrix of call flows. It ranks them by PageRank, articulation points and a node-removal simulation, and turns the ranking into criticality tiers that decide which alerts may trigger automated containment.</span>
-<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>**The detection layer** is a shallow autoencoder, written in base R with analytic gradients and Adam. It is trained on <span class="in">`r d_features`</span> correlated, seasonal telemetry features. Alerts fire when reconstruction loss exceeds a threshold fitted to the loss tail with a Generalized Pareto Distribution on held-out hosts.</span>
-<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>**Results.** Across <span class="in">`r n_seeds`</span> independent seeds (mean <span class="co">[</span><span class="ot">95% range</span><span class="co">]</span>):</span>
-<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>The autoencoder separates attacks from normal windows with ROC AUC <span class="in">`r f_rob("ROC AUC (all attacks)", f = f3)`</span>. Mahalanobis distance does better (<span class="in">`r f_rob("Mahalanobis distance", "ROC AUC by method", f3)`</span>), so the network adds nothing over simpler statistics on this data.</span>
-<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>At the 99.9% threshold it catches <span class="in">`r f_rob("high", "Detection at 99.9% by intensity", f_pct)`</span> of high-intensity attacks, <span class="in">`r f_rob("medium", "Detection at 99.9% by intensity", f_pct)`</span> of medium and <span class="in">`r f_rob("low", "Detection at 99.9% by intensity", f_pct)`</span> of low.</span>
-<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>It misses data exfiltration at every intensity.</span>
-<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>False alarms at 99.9% were <span class="in">`r f_rob("False alarms at 99.9%", f = \(x) f_num(x, 1))`</span> per <span class="in">`r f_int(n_normal_test)`</span> normal windows, against about <span class="in">`r f_num(n_normal_test * 0.001, 0)`</span> expected. The threshold does not transfer cleanly to new hosts.</span>
-<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>The loss tail is heavy (shape ξ = <span class="in">`r f_rob("GPD shape xi")`</span>), driven by rare benign count spikes.</span>
-<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>The two-layer design is sound. The detector, as built, is not ready for automated response.</span>
-<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>These results come from simulated data and injected attacks, not production telemetry. They show how the method behaves, not how it would perform in a real enterprise.</span>
-<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a><span class="fu">## Introduction</span></span>
-<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a>Enterprise systems produce large volumes of authentication, network and host telemetry. Most monitoring still relies on fixed signatures and static thresholds, which miss attacks that stay inside normal ranges. Credential stuffing spread across many sources and slow data exfiltration are examples. An unsupervised detector learns what normal looks like and flags departures from it, so it can in principle catch attacks nobody has written a rule for.</span>
-<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a>Detection alone is not enough. The usual response to an alert is containment: isolate a host, revoke a token. If the affected service sits under much of the estate, the containment can cause a larger outage than the attack. This project therefore pairs the detector with a structural model of service dependencies. Together they answer two questions: *is this window abnormal?* and *how dangerous is it to act on that automatically?*</span>
-<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a>::: {.callout-warning}</span>
-<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a><span class="fu">## Read this first</span></span>
-<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a>Every number on this site comes from a simulation with assumed parameters (<span class="in">`params.yaml`</span>). The results show how the methods behave under controlled conditions. They do not estimate how the system would perform on any real network.</span>
-<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a>:::</span>
-<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a><span class="fu">## Techniques</span></span>
-<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-54"><a href="#cb4-54" aria-hidden="true" tabindex="-1"></a>**Markov transition matrix.** Services are nodes, and an edge $i \to j$ means service $i$ calls service $j$. Normalizing call volumes by row gives $P_{ij} = \Pr(\text{next call goes to } j \mid \text{at } i)$, a row-stochastic matrix. It assumes the next hop depends only on the current service (first-order Markov). <span class="co">[</span><span class="ot">Details →</span><span class="co">](dependency-graph.qmd)</span></span>
-<span id="cb4-55"><a href="#cb4-55" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a>**PageRank.** PageRank is the long-run share of request hops landing on each service, with random restarts weighted by a damping factor. It measures *dependency concentration*. It is not a single-point-of-failure detector, so it is cross-checked against articulation points and a node-removal simulation.</span>
-<span id="cb4-57"><a href="#cb4-57" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-58"><a href="#cb4-58" aria-hidden="true" tabindex="-1"></a>**Shallow autoencoder.** A <span class="in">`r d_features`</span>-<span class="in">`r cfg$autoencoder$bottleneck`</span>-<span class="in">`r d_features`</span> network with a $\tanh$ bottleneck and a linear decoder, trained only on normal windows. Each window is scored by its mean squared reconstruction error $\ell(\mathbf{x}) = \tfrac{1}{d}\lVert \mathbf{x} - \hat{\mathbf{x}} \rVert^2$. With one hidden layer it is close to principal component analysis, and the results confirm this. <span class="co">[</span><span class="ot">Details →</span><span class="co">](detector.qmd)</span></span>
-<span id="cb4-59"><a href="#cb4-59" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-60"><a href="#cb4-60" aria-hidden="true" tabindex="-1"></a>**Extreme Value Theory (peaks over threshold).** Losses above a high level are modelled with a Generalized Pareto Distribution. This gives quantile thresholds $\tau_q$ for exceedance probabilities too small to estimate directly from the data. The thresholds come with bootstrap intervals, diagnostics and a calibration test. <span class="co">[</span><span class="ot">Details →</span><span class="co">](thresholds.qmd)</span></span>
-<span id="cb4-61"><a href="#cb4-61" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-62"><a href="#cb4-62" aria-hidden="true" tabindex="-1"></a><span class="fu">## Architecture</span></span>
-<span id="cb4-63"><a href="#cb4-63" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-66"><a href="#cb4-66" aria-hidden="true" tabindex="-1"></a><span class="in">```{mermaid}</span></span>
-<span id="cb4-67"><a href="#cb4-67" aria-hidden="true" tabindex="-1"></a>%%| fig-align: center</span>
-<span id="cb4-68"><a href="#cb4-68" aria-hidden="true" tabindex="-1"></a>%<span class="dt">%</span>{init: {<span class="ot">'</span><span class="ss">themeVariables</span><span class="ot">'</span>: { <span class="ot">'</span><span class="ss">fontSize</span><span class="ot">'</span>: <span class="ot">'</span><span class="ss">15px</span><span class="ot">'</span>, <span class="ot">'</span><span class="ss">fontFamily</span><span class="ot">'</span>: <span class="ot">'</span><span class="ss">sans-serif</span><span class="ot">'</span> }}}%%</span>
-<span id="cb4-69"><a href="#cb4-69" aria-hidden="true" tabindex="-1"></a>flowchart LR</span>
-<span id="cb4-70"><a href="#cb4-70" aria-hidden="true" tabindex="-1"></a>    T[<span class="ot">"</span><span class="st">&lt;b&gt;Telemetry window&lt;/b&gt;&lt;br&gt;x ∈ ℝᵈ</span><span class="ot">"</span>] --&gt; AE[<span class="ot">"</span><span class="st">&lt;b&gt;Shallow autoencoder&lt;/b&gt;&lt;br&gt;d → k → d</span><span class="ot">"</span>]</span>
-<span id="cb4-71"><a href="#cb4-71" aria-hidden="true" tabindex="-1"></a>    AE --&gt; L[<span class="ot">"</span><span class="st">&lt;b&gt;Loss&lt;/b&gt;&lt;br&gt;ℓ(x) = (1/d)‖x − x̂‖²</span><span class="ot">"</span>]</span>
-<span id="cb4-72"><a href="#cb4-72" aria-hidden="true" tabindex="-1"></a>    L --&gt; EVT[<span class="ot">"</span><span class="st">&lt;b&gt;EVT threshold&lt;/b&gt;&lt;br&gt;τ_q from held-out GPD fit</span><span class="ot">"</span>]</span>
-<span id="cb4-73"><a href="#cb4-73" aria-hidden="true" tabindex="-1"></a>    EVT --&gt; A{<span class="ot">"</span><span class="st">&lt;b&gt;Alert?&lt;/b&gt;&lt;br&gt;ℓ(x) &gt; τ_q</span><span class="ot">"</span>}</span>
-<span id="cb4-74"><a href="#cb4-74" aria-hidden="true" tabindex="-1"></a>    G[<span class="ot">"</span><span class="st">&lt;b&gt;Service call graph&lt;/b&gt;</span><span class="ot">"</span>] --&gt; P[<span class="ot">"</span><span class="st">&lt;b&gt;Transition matrix P&lt;/b&gt;&lt;br&gt;PageRank, articulation,&lt;br&gt;removal impact</span><span class="ot">"</span>]</span>
-<span id="cb4-75"><a href="#cb4-75" aria-hidden="true" tabindex="-1"></a>    P --&gt; C[<span class="ot">"</span><span class="st">&lt;b&gt;Criticality tier&lt;/b&gt;</span><span class="ot">"</span>]</span>
-<span id="cb4-76"><a href="#cb4-76" aria-hidden="true" tabindex="-1"></a>    A --&gt; R[<span class="ot">"</span><span class="st">&lt;b&gt;Containment routing&lt;/b&gt;</span><span class="ot">"</span>]</span>
-<span id="cb4-77"><a href="#cb4-77" aria-hidden="true" tabindex="-1"></a>    C --&gt; R</span>
-<span id="cb4-78"><a href="#cb4-78" aria-hidden="true" tabindex="-1"></a>    R --&gt; H[<span class="ot">"</span><span class="st">Tier 1: human approval</span><span class="ot">"</span>]</span>
-<span id="cb4-79"><a href="#cb4-79" aria-hidden="true" tabindex="-1"></a>    R --&gt; S[<span class="ot">"</span><span class="st">Tier 2–3: low-blast-radius&lt;br&gt;automated actions</span><span class="ot">"</span>]</span>
-<span id="cb4-80"><a href="#cb4-80" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-81"><a href="#cb4-81" aria-hidden="true" tabindex="-1"></a>    classDef <span class="kw">default</span> fill:<span class="co">#f8f9fa,stroke:#0275d8,stroke-width:1.5px;</span></span>
-<span id="cb4-82"><a href="#cb4-82" aria-hidden="true" tabindex="-1"></a>    classDef human fill:<span class="co">#fce4e4,stroke:#d9534f,stroke-width:1.5px;</span></span>
-<span id="cb4-83"><a href="#cb4-83" aria-hidden="true" tabindex="-1"></a>    class H human;</span>
-<span id="cb4-84"><a href="#cb4-84" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb4-85"><a href="#cb4-85" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-86"><a href="#cb4-86" aria-hidden="true" tabindex="-1"></a><span class="fu">## Headline results</span></span>
-<span id="cb4-87"><a href="#cb4-87" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-88"><a href="#cb4-88" aria-hidden="true" tabindex="-1"></a>It collects the numbers a decision-maker needs on one screen, each averaged over <span class="in">`r n_seeds`</span> complete re-runs instead of one lucky draw.</span>
-<span id="cb4-89"><a href="#cb4-89" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-92"><a href="#cb4-92" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb4-93"><a href="#cb4-93" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: tbl-headline</span></span>
-<span id="cb4-94"><a href="#cb4-94" aria-hidden="true" tabindex="-1"></a>pick <span class="ot">&lt;-</span> <span class="fu">tribble</span>(</span>
-<span id="cb4-95"><a href="#cb4-95" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span>group,                             <span class="sc">~</span>metric,                        <span class="sc">~</span>label,                                        <span class="sc">~</span>fmt,</span>
-<span id="cb4-96"><a href="#cb4-96" aria-hidden="true" tabindex="-1"></a>  <span class="st">"ROC AUC by method"</span>,                ae_label,                       <span class="st">"ROC AUC, autoencoder"</span>,                         <span class="st">"num"</span>,</span>
-<span id="cb4-97"><a href="#cb4-97" aria-hidden="true" tabindex="-1"></a>  <span class="st">"ROC AUC by method"</span>,                <span class="st">"Mahalanobis distance"</span>,         <span class="st">"ROC AUC, Mahalanobis distance (baseline)"</span>,     <span class="st">"num"</span>,</span>
-<span id="cb4-98"><a href="#cb4-98" aria-hidden="true" tabindex="-1"></a>  <span class="st">"ROC AUC by method"</span>,                <span class="st">"Sum of squared z-scores"</span>,      <span class="st">"ROC AUC, sum of squared z-scores (baseline)"</span>,  <span class="st">"num"</span>,</span>
-<span id="cb4-99"><a href="#cb4-99" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Detection at 99.9% by intensity"</span>,  <span class="st">"high"</span>,                         <span class="st">"Detection at 99.9%, high-intensity attacks"</span>,   <span class="st">"pct"</span>,</span>
-<span id="cb4-100"><a href="#cb4-100" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Detection at 99.9% by intensity"</span>,  <span class="st">"medium"</span>,                       <span class="st">"Detection at 99.9%, medium-intensity attacks"</span>, <span class="st">"pct"</span>,</span>
-<span id="cb4-101"><a href="#cb4-101" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Detection at 99.9% by intensity"</span>,  <span class="st">"low"</span>,                          <span class="st">"Detection at 99.9%, low-intensity attacks"</span>,    <span class="st">"pct"</span>,</span>
-<span id="cb4-102"><a href="#cb4-102" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Detection at 99.9% by attack"</span>,     <span class="st">"Data Exfiltration"</span>,            <span class="st">"Detection at 99.9%, data exfiltration"</span>,        <span class="st">"pct"</span>,</span>
-<span id="cb4-103"><a href="#cb4-103" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Model"</span>,                            <span class="st">"False alarms at 99.9%"</span>,        <span class="st">"False alarms at 99.9% (count)"</span>,                <span class="st">"int"</span>,</span>
-<span id="cb4-104"><a href="#cb4-104" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Model"</span>,                            <span class="st">"GPD shape xi"</span>,                 <span class="st">"Tail shape ξ"</span>,                                 <span class="st">"num"</span>,</span>
-<span id="cb4-105"><a href="#cb4-105" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Model"</span>,                            <span class="st">"tau 0.999"</span>,                    <span class="st">"Threshold τ₀.₉₉₉"</span>,                             <span class="st">"num"</span></span>
-<span id="cb4-106"><a href="#cb4-106" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb4-107"><a href="#cb4-107" aria-hidden="true" tabindex="-1"></a>pick <span class="sc">|&gt;</span></span>
-<span id="cb4-108"><a href="#cb4-108" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(rob, <span class="at">by =</span> <span class="fu">join_by</span>(group, metric)) <span class="sc">|&gt;</span></span>
-<span id="cb4-109"><a href="#cb4-109" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">c</span>(mean, lo, hi), \(x) <span class="fu">case_when</span>(fmt <span class="sc">==</span> <span class="st">"pct"</span> <span class="sc">~</span> <span class="fu">f_pct</span>(x), fmt <span class="sc">==</span> <span class="st">"int"</span> <span class="sc">~</span> <span class="fu">f_num</span>(x, <span class="dv">1</span>), <span class="at">.default =</span> <span class="fu">f_num</span>(x, <span class="dv">3</span>)))) <span class="sc">|&gt;</span></span>
-<span id="cb4-110"><a href="#cb4-110" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(label, mean, lo, hi) <span class="sc">|&gt;</span></span>
-<span id="cb4-111"><a href="#cb4-111" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gt</span>() <span class="sc">|&gt;</span></span>
-<span id="cb4-112"><a href="#cb4-112" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_header</span>(<span class="at">title =</span> <span class="fu">sprintf</span>(<span class="st">"Headline Results across %d Seeds"</span>, n_seeds),</span>
-<span id="cb4-113"><a href="#cb4-113" aria-hidden="true" tabindex="-1"></a>             <span class="at">subtitle =</span> <span class="fu">sprintf</span>(<span class="st">"False alarms out of %s normal test windows; about %.0f expected at 99.9%%"</span>,</span>
-<span id="cb4-114"><a href="#cb4-114" aria-hidden="true" tabindex="-1"></a>                                <span class="fu">f_int</span>(n_normal_test), n_normal_test <span class="sc">*</span> <span class="fl">0.001</span>)) <span class="sc">|&gt;</span></span>
-<span id="cb4-115"><a href="#cb4-115" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cols_label</span>(<span class="at">label =</span> <span class="st">"Quantity"</span>, <span class="at">mean =</span> <span class="st">"Mean"</span>, <span class="at">lo =</span> <span class="st">"2.5%"</span>, <span class="at">hi =</span> <span class="st">"97.5%"</span>) <span class="sc">|&gt;</span></span>
-<span id="cb4-116"><a href="#cb4-116" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_options</span>(<span class="at">table.font.size =</span> <span class="dv">12</span>)</span>
-<span id="cb4-117"><a href="#cb4-117" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb4-118"><a href="#cb4-118" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-119"><a href="#cb4-119" aria-hidden="true" tabindex="-1"></a>**How to read the table.** Each row is one result, averaged over <span class="in">`r n_seeds`</span> complete re-runs of the study, each with fresh simulated data, a newly trained model and a newly fitted threshold. ROC AUC runs from 0.5, no better than a coin toss, to 1, complete separation of attacks from normal activity. Detection rates are the share of attack windows that raised an alert. The 2.5% and 97.5% columns bracket the middle 95% of re-runs.</span>
-<span id="cb4-120"><a href="#cb4-120" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-121"><a href="#cb4-121" aria-hidden="true" tabindex="-1"></a>**What the table tells you.** The detector reliably catches loud attacks and misses quiet ones: <span class="in">`r f_pct(rob_get("high", "Detection at 99.9% by intensity")$mean)`</span> of high-intensity windows but <span class="in">`r f_pct(rob_get("low", "Detection at 99.9% by intensity")$mean)`</span> of low-intensity ones, and almost no data exfiltration. It does no better than Mahalanobis distance, a classical statistic that needs no training. False alarms average <span class="in">`r f_num(fa999$mean, 1)`</span> against about <span class="in">`r f_num(n_normal_test * 0.001, 0)`</span> expected and vary several-fold between runs. The original AUC of 1.0 came from the simulation design, not the model.</span>
-<span id="cb4-122"><a href="#cb4-122" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-123"><a href="#cb4-123" aria-hidden="true" tabindex="-1"></a><span class="fu">## Recommendations</span></span>
-<span id="cb4-124"><a href="#cb4-124" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-125"><a href="#cb4-125" aria-hidden="true" tabindex="-1"></a>We recommend three governance practices:</span>
-<span id="cb4-126"><a href="#cb4-126" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-127"><a href="#cb4-127" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>**Human-in-the-loop containment, routed by criticality.** Alerts on Tier 1 services (<span class="in">`r paste(tier1, collapse = ", ")`</span>) require human approval before isolation or credential revocation, because isolating them is itself an outage. Automate only low-blast-radius actions, such as step-up authentication or ending a single session, and only after the detector has been validated on production telemetry. At realistic attack rates most alerts at the 99.9% threshold would be false alarms (see the <span class="co">[</span><span class="ot">base-rate table</span><span class="co">](evaluation.qmd#base-rates)</span>), so automated isolation today would mostly hit healthy hosts.</span>
-<span id="cb4-128"><a href="#cb4-128" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-129"><a href="#cb4-129" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>**Explain every alert, and test the explanations.** Report the top three contributing features with each alert. Measure how often they point at the true cause, and compare them against plain z-scores, which did as well here. This aligns with the explainability and model-risk expectations in the <span class="co">[</span><span class="ot">NIST AI Risk Management Framework</span><span class="co">](https://www.nist.gov/itl/ai-risk-management-framework/ai-risk-management-framework-faqs)</span> (voluntary) and <span class="co">[</span><span class="ot">OSFI Guideline E-23</span><span class="co">](https://www.osfi-bsif.gc.ca/en/guidance/guidance-library/guideline-e-23-model-risk-management-2027)</span> (effective May 1, 2027 for federally regulated Canadian financial institutions). Neither one prescribes a specific detector.</span>
-<span id="cb4-130"><a href="#cb4-130" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-131"><a href="#cb4-131" aria-hidden="true" tabindex="-1"></a><span class="ss">3. </span>**Monitor drift by effect size, not significance.** Replace weekly per-feature KS tests with Wasserstein distance per feature (in standard-deviation units, with an effect-size trigger). Track the live alert rate against its expected $1-q$, and refit and re-validate the threshold on a schedule. In the <span class="co">[</span><span class="ot">drift test</span><span class="co">](evaluation.qmd#drift-monitoring)</span>, KS flagged harmless shifts every time, and PSI at standard cut-offs missed a material one.</span>
-<span id="cb4-132"><a href="#cb4-132" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-133"><a href="#cb4-133" aria-hidden="true" tabindex="-1"></a><span class="fu">## Limitations</span></span>
-<span id="cb4-134"><a href="#cb4-134" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-135"><a href="#cb4-135" aria-hidden="true" tabindex="-1"></a>What would change the conclusions:</span>
-<span id="cb4-136"><a href="#cb4-136" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-137"><a href="#cb4-137" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Simulated data.** The latent factors, marginals, correlations, seasonality and host roles are all assumptions. Real telemetry has missing data, logging changes, holidays and populations of very different hosts. Client data would replace the generator in <span class="in">`R/sim.R`</span>: at least four weeks of host-by-window telemetry with an asset inventory.</span>
-<span id="cb4-138"><a href="#cb4-138" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Simulated attacks.** Each attack changes a few features in single windows or short runs. Real campaigns move across hosts and over days. Labelled red-team or incident data would replace <span class="in">`params.yaml: attacks`</span>.</span>
-<span id="cb4-139"><a href="#cb4-139" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Heavy, discrete tail.** Rare count features dominate extreme normal losses, so a single GPD fits poorly and the threshold depends on the chosen level $u$. Per-host or per-role thresholds, or separate models for count features, may change the picture.</span>
-<span id="cb4-140"><a href="#cb4-140" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Fixed threshold.** $\tau_q$ is fitted once. Thresholds that adapt over time, by rolling refit or by time of day, are not implemented.</span>
-<span id="cb4-141"><a href="#cb4-141" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Dependency graph.** The graph, call volumes and tier cut-offs are illustrative. The first-order Markov assumption is stated, not tested. Service-mesh call logs and session traces would replace them.</span>
-<span id="cb4-142"><a href="#cb4-142" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Prevalence.** The test set is about <span class="in">`r f_pct(n_attack_test / (n_attack_test + n_normal_test), 0)`</span> attacks. Real environments are orders of magnitude lower, which is why the base-rate table matters more than the ROC curve.</span>
-<span id="cb4-143"><a href="#cb4-143" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-144"><a href="#cb4-144" aria-hidden="true" tabindex="-1"></a><span class="fu">## What changed from the original version</span></span>
-<span id="cb4-145"><a href="#cb4-145" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-146"><a href="#cb4-146" aria-hidden="true" tabindex="-1"></a>An independent review found that the original single-page report:</span>
-<span id="cb4-147"><a href="#cb4-147" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-148"><a href="#cb4-148" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>advertised a Markov/PageRank layer it never built;</span>
-<span id="cb4-149"><a href="#cb4-149" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>simulated independent features (so the 0.75 loss plateau was a mathematical floor, not learning);</span>
-<span id="cb4-150"><a href="#cb4-150" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>used attacks pushed far outside normal ranges;</span>
-<span id="cb4-151"><a href="#cb4-151" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>reported single-seed results with no uncertainty.</span>
-<span id="cb4-152"><a href="#cb4-152" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-153"><a href="#cb4-153" aria-hidden="true" tabindex="-1"></a>This version builds the dependency layer and adds correlated, seasonal data with three attack intensities. The detector is compared against baselines over <span class="in">`r n_seeds`</span> seeds. The EVT threshold is fitted on held-out hosts, with diagnostics and calibration tests. The headline results changed accordingly.</span>
-<span id="cb4-154"><a href="#cb4-154" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-155"><a href="#cb4-155" aria-hidden="true" tabindex="-1"></a><span class="fu">## Reproducibility</span></span>
-<span id="cb4-156"><a href="#cb4-156" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-157"><a href="#cb4-157" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>Install packages with <span class="in">`pak`</span> (see the session information below). Package versions are not pinned with <span class="in">`renv`</span>, so the session information below is the record of what produced these results.</span>
-<span id="cb4-158"><a href="#cb4-158" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>Run <span class="in">`Rscript run_all.R`</span> from the project root. It regenerates every result in <span class="in">`results/`</span> in under a minute.</span>
-<span id="cb4-159"><a href="#cb4-159" aria-hidden="true" tabindex="-1"></a><span class="ss">3. </span>Run <span class="in">`Rscript -e 'testthat::test_dir("tests/testthat")'`</span> for the unit tests: GPD threshold including $\xi = 0$, gradient check, transition matrix and PageRank, removal impact, drift metrics, AUC, and the simulator.</span>
-<span id="cb4-160"><a href="#cb4-160" aria-hidden="true" tabindex="-1"></a><span class="ss">4. </span>Run <span class="in">`quarto render`</span>. Pages read the cached results. Because <span class="in">`freeze: auto`</span> is on, delete <span class="in">`_freeze/`</span> after re-running <span class="in">`run_all.R`</span> so every page re-executes.</span>
-<span id="cb4-161"><a href="#cb4-161" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-162"><a href="#cb4-162" aria-hidden="true" tabindex="-1"></a>All parameters and seeds are in <span class="in">`params.yaml`</span>: main seed <span class="in">`r cfg$seeds$main`</span>, robustness seeds 1–<span class="in">`r cfg$seeds$robustness`</span>, graph seed <span class="in">`r cfg$graph$seed`</span>. Each seeded run is deterministic and does not depend on the number of parallel workers.</span>
-<span id="cb4-163"><a href="#cb4-163" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-164"><a href="#cb4-164" aria-hidden="true" tabindex="-1"></a>::: {.callout-note collapse="true" icon="false"}</span>
-<span id="cb4-165"><a href="#cb4-165" aria-hidden="true" tabindex="-1"></a><span class="fu">## Session information</span></span>
-<span id="cb4-166"><a href="#cb4-166" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-169"><a href="#cb4-169" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb4-170"><a href="#cb4-170" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: session-info</span></span>
-<span id="cb4-171"><a href="#cb4-171" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
-<span id="cb4-172"><a href="#cb4-172" aria-hidden="true" tabindex="-1"></a>sessioninfo<span class="sc">::</span><span class="fu">session_info</span>()</span>
-<span id="cb4-173"><a href="#cb4-173" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb4-174"><a href="#cb4-174" aria-hidden="true" tabindex="-1"></a>:::</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Cyber Anomaly Detection &amp; Service Dependency Risk"</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="an">subtitle:</span><span class="co"> "Markov transition matrices, PageRank, a shallow autoencoder, and Extreme Value Theory thresholds: a simulation study"</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="an">author:</span><span class="co"> Patrick Lefler</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="an">date:</span><span class="co"> "2026-08-13"</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: setup</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="co">#| include: false</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"R/pages/setup.R"</span>)</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>gt_tab <span class="ot">&lt;-</span> graph<span class="sc">$</span>table</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>tier1 <span class="ot">&lt;-</span> gt_tab <span class="sc">|&gt;</span> <span class="fu">filter</span>(criticality_tier <span class="sc">==</span> <span class="st">"Tier 1"</span>) <span class="sc">|&gt;</span> <span class="fu">pull</span>(name)</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>fa999 <span class="ot">&lt;-</span> <span class="fu">rob_get</span>(<span class="st">"False alarms at 99.9%"</span>)</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>f3 <span class="ot">&lt;-</span> \(x) <span class="fu">f_num</span>(x, <span class="dv">3</span>)</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="fu">## Introduction</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>Enterprise systems produce large volumes of authentication, network and host telemetry. Most monitoring still relies on fixed signatures and static thresholds, which miss attacks that stay inside normal ranges. Credential stuffing spread across many sources and slow data exfiltration are examples. An unsupervised detector learns what normal looks like and flags departures from it, so it can in principle catch attacks nobody has written a rule for.</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>Detection alone is not enough. The usual response to an alert is containment: isolate a host, revoke a token. If the affected service sits under much of the estate, the containment can cause a larger outage than the attack. This project therefore tests a two-layer design, built in R, on **simulated** enterprise telemetry. Together the layers answer two questions: *is this window abnormal?* and *how dangerous is it to act on that automatically?*</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>**The structural layer** models <span class="in">`r nrow(gt_tab)`</span> services as a Markov transition matrix of call flows. It ranks them by PageRank, articulation points and a node-removal simulation, and turns the ranking into criticality tiers that decide which alerts may trigger automated containment.</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>**The detection layer** is a shallow autoencoder, written in base R with analytic gradients and Adam. It is trained on <span class="in">`r d_features`</span> correlated, seasonal telemetry features. Alerts fire when reconstruction loss exceeds a threshold fitted to the loss tail with a Generalized Pareto Distribution on held-out hosts.</span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>**Results.** Across <span class="in">`r n_seeds`</span> independent seeds (mean <span class="co">[</span><span class="ot">95% range</span><span class="co">]</span>):</span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>The autoencoder separates attacks from normal windows with ROC AUC <span class="in">`r f_rob("ROC AUC (all attacks)", f = f3)`</span>. Mahalanobis distance does better (<span class="in">`r f_rob("Mahalanobis distance", "ROC AUC by method", f3)`</span>), so the network adds nothing over simpler statistics on this data.</span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>At the 99.9% threshold it catches <span class="in">`r f_rob("high", "Detection at 99.9% by intensity", f_pct)`</span> of high-intensity attacks, <span class="in">`r f_rob("medium", "Detection at 99.9% by intensity", f_pct)`</span> of medium and <span class="in">`r f_rob("low", "Detection at 99.9% by intensity", f_pct)`</span> of low.</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>It misses data exfiltration at every intensity.</span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>False alarms at 99.9% were <span class="in">`r f_rob("False alarms at 99.9%", f = \(x) f_num(x, 1))`</span> per <span class="in">`r f_int(n_normal_test)`</span> normal windows, against about <span class="in">`r f_num(n_normal_test * 0.001, 0)`</span> expected. The threshold does not transfer cleanly to new hosts.</span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>The loss tail is heavy (shape ξ = <span class="in">`r f_rob("GPD shape xi")`</span>), driven by rare benign count spikes.</span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>The two-layer design is sound. The detector, as built, is not ready for automated response.</span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>::: {.callout-warning}</span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a><span class="fu">## Read this first</span></span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>Every number on this site comes from a simulation with assumed parameters (<span class="in">`params.yaml`</span>) and injected attacks, not production telemetry. The results show how the methods behave under controlled conditions. They do not estimate how the system would perform on any real network.</span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a><span class="fu">## Techniques</span></span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>**Markov transition matrix.** Services are nodes, and an edge $i \to j$ means service $i$ calls service $j$. Normalizing call volumes by row gives $P_{ij} = \Pr(\text{next call goes to } j \mid \text{at } i)$, a row-stochastic matrix. It assumes the next hop depends only on the current service (first-order Markov). <span class="co">[</span><span class="ot">Details →</span><span class="co">](dependency-graph.qmd)</span></span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>**PageRank.** PageRank is the long-run share of request hops landing on each service, with random restarts weighted by a damping factor. It measures *dependency concentration*. It is not a single-point-of-failure detector, so it is cross-checked against articulation points and a node-removal simulation.</span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>**Shallow autoencoder.** A <span class="in">`r d_features`</span>-<span class="in">`r cfg$autoencoder$bottleneck`</span>-<span class="in">`r d_features`</span> network with a $\tanh$ bottleneck and a linear decoder, trained only on normal windows. Each window is scored by its mean squared reconstruction error $\ell(\mathbf{x}) = \tfrac{1}{d}\lVert \mathbf{x} - \hat{\mathbf{x}} \rVert^2$. With one hidden layer it is close to principal component analysis, and the results confirm this. <span class="co">[</span><span class="ot">Details →</span><span class="co">](detector.qmd)</span></span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>**Extreme Value Theory (peaks over threshold).** Losses above a high level are modelled with a Generalized Pareto Distribution. This gives quantile thresholds $\tau_q$ for exceedance probabilities too small to estimate directly from the data. The thresholds come with bootstrap intervals, diagnostics and a calibration test. <span class="co">[</span><span class="ot">Details →</span><span class="co">](thresholds.qmd)</span></span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a><span class="fu">## Architecture</span></span>
+<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a><span class="in">```{mermaid}</span></span>
+<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a>%%| fig-align: center</span>
+<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a>%<span class="dt">%</span>{init: {<span class="ot">'</span><span class="ss">themeVariables</span><span class="ot">'</span>: { <span class="ot">'</span><span class="ss">fontSize</span><span class="ot">'</span>: <span class="ot">'</span><span class="ss">15px</span><span class="ot">'</span>, <span class="ot">'</span><span class="ss">fontFamily</span><span class="ot">'</span>: <span class="ot">'</span><span class="ss">sans-serif</span><span class="ot">'</span> }}}%%</span>
+<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a>flowchart LR</span>
+<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a>    T[<span class="ot">"</span><span class="st">&lt;b&gt;Telemetry window&lt;/b&gt;&lt;br&gt;x ∈ ℝᵈ</span><span class="ot">"</span>] --&gt; AE[<span class="ot">"</span><span class="st">&lt;b&gt;Shallow autoencoder&lt;/b&gt;&lt;br&gt;d → k → d</span><span class="ot">"</span>]</span>
+<span id="cb3-64"><a href="#cb3-64" aria-hidden="true" tabindex="-1"></a>    AE --&gt; L[<span class="ot">"</span><span class="st">&lt;b&gt;Loss&lt;/b&gt;&lt;br&gt;ℓ(x) = (1/d)‖x − x̂‖²</span><span class="ot">"</span>]</span>
+<span id="cb3-65"><a href="#cb3-65" aria-hidden="true" tabindex="-1"></a>    L --&gt; EVT[<span class="ot">"</span><span class="st">&lt;b&gt;EVT threshold&lt;/b&gt;&lt;br&gt;τ_q from held-out GPD fit</span><span class="ot">"</span>]</span>
+<span id="cb3-66"><a href="#cb3-66" aria-hidden="true" tabindex="-1"></a>    EVT --&gt; A{<span class="ot">"</span><span class="st">&lt;b&gt;Alert?&lt;/b&gt;&lt;br&gt;ℓ(x) &gt; τ_q</span><span class="ot">"</span>}</span>
+<span id="cb3-67"><a href="#cb3-67" aria-hidden="true" tabindex="-1"></a>    G[<span class="ot">"</span><span class="st">&lt;b&gt;Service call graph&lt;/b&gt;</span><span class="ot">"</span>] --&gt; P[<span class="ot">"</span><span class="st">&lt;b&gt;Transition matrix P&lt;/b&gt;&lt;br&gt;PageRank, articulation,&lt;br&gt;removal impact</span><span class="ot">"</span>]</span>
+<span id="cb3-68"><a href="#cb3-68" aria-hidden="true" tabindex="-1"></a>    P --&gt; C[<span class="ot">"</span><span class="st">&lt;b&gt;Criticality tier&lt;/b&gt;</span><span class="ot">"</span>]</span>
+<span id="cb3-69"><a href="#cb3-69" aria-hidden="true" tabindex="-1"></a>    A --&gt; R[<span class="ot">"</span><span class="st">&lt;b&gt;Containment routing&lt;/b&gt;</span><span class="ot">"</span>]</span>
+<span id="cb3-70"><a href="#cb3-70" aria-hidden="true" tabindex="-1"></a>    C --&gt; R</span>
+<span id="cb3-71"><a href="#cb3-71" aria-hidden="true" tabindex="-1"></a>    R --&gt; H[<span class="ot">"</span><span class="st">Tier 1: human approval</span><span class="ot">"</span>]</span>
+<span id="cb3-72"><a href="#cb3-72" aria-hidden="true" tabindex="-1"></a>    R --&gt; S[<span class="ot">"</span><span class="st">Tier 2–3: low-blast-radius&lt;br&gt;automated actions</span><span class="ot">"</span>]</span>
+<span id="cb3-73"><a href="#cb3-73" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-74"><a href="#cb3-74" aria-hidden="true" tabindex="-1"></a>    classDef <span class="kw">default</span> fill:<span class="co">#f8f9fa,stroke:#0275d8,stroke-width:1.5px;</span></span>
+<span id="cb3-75"><a href="#cb3-75" aria-hidden="true" tabindex="-1"></a>    classDef human fill:<span class="co">#fce4e4,stroke:#d9534f,stroke-width:1.5px;</span></span>
+<span id="cb3-76"><a href="#cb3-76" aria-hidden="true" tabindex="-1"></a>    class H human;</span>
+<span id="cb3-77"><a href="#cb3-77" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb3-78"><a href="#cb3-78" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-79"><a href="#cb3-79" aria-hidden="true" tabindex="-1"></a><span class="fu">## Headline results</span></span>
+<span id="cb3-80"><a href="#cb3-80" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-81"><a href="#cb3-81" aria-hidden="true" tabindex="-1"></a>It collects the numbers a decision-maker needs on one screen, each averaged over <span class="in">`r n_seeds`</span> complete re-runs instead of one lucky draw.</span>
+<span id="cb3-82"><a href="#cb3-82" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-85"><a href="#cb3-85" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb3-86"><a href="#cb3-86" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: tbl-headline</span></span>
+<span id="cb3-87"><a href="#cb3-87" aria-hidden="true" tabindex="-1"></a>pick <span class="ot">&lt;-</span> <span class="fu">tribble</span>(</span>
+<span id="cb3-88"><a href="#cb3-88" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span>group,                             <span class="sc">~</span>metric,                        <span class="sc">~</span>label,                                        <span class="sc">~</span>fmt,</span>
+<span id="cb3-89"><a href="#cb3-89" aria-hidden="true" tabindex="-1"></a>  <span class="st">"ROC AUC by method"</span>,                ae_label,                       <span class="st">"ROC AUC, autoencoder"</span>,                         <span class="st">"num"</span>,</span>
+<span id="cb3-90"><a href="#cb3-90" aria-hidden="true" tabindex="-1"></a>  <span class="st">"ROC AUC by method"</span>,                <span class="st">"Mahalanobis distance"</span>,         <span class="st">"ROC AUC, Mahalanobis distance (baseline)"</span>,     <span class="st">"num"</span>,</span>
+<span id="cb3-91"><a href="#cb3-91" aria-hidden="true" tabindex="-1"></a>  <span class="st">"ROC AUC by method"</span>,                <span class="st">"Sum of squared z-scores"</span>,      <span class="st">"ROC AUC, sum of squared z-scores (baseline)"</span>,  <span class="st">"num"</span>,</span>
+<span id="cb3-92"><a href="#cb3-92" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Detection at 99.9% by intensity"</span>,  <span class="st">"high"</span>,                         <span class="st">"Detection at 99.9%, high-intensity attacks"</span>,   <span class="st">"pct"</span>,</span>
+<span id="cb3-93"><a href="#cb3-93" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Detection at 99.9% by intensity"</span>,  <span class="st">"medium"</span>,                       <span class="st">"Detection at 99.9%, medium-intensity attacks"</span>, <span class="st">"pct"</span>,</span>
+<span id="cb3-94"><a href="#cb3-94" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Detection at 99.9% by intensity"</span>,  <span class="st">"low"</span>,                          <span class="st">"Detection at 99.9%, low-intensity attacks"</span>,    <span class="st">"pct"</span>,</span>
+<span id="cb3-95"><a href="#cb3-95" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Detection at 99.9% by attack"</span>,     <span class="st">"Data Exfiltration"</span>,            <span class="st">"Detection at 99.9%, data exfiltration"</span>,        <span class="st">"pct"</span>,</span>
+<span id="cb3-96"><a href="#cb3-96" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Model"</span>,                            <span class="st">"False alarms at 99.9%"</span>,        <span class="st">"False alarms at 99.9% (count)"</span>,                <span class="st">"int"</span>,</span>
+<span id="cb3-97"><a href="#cb3-97" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Model"</span>,                            <span class="st">"GPD shape xi"</span>,                 <span class="st">"Tail shape ξ"</span>,                                 <span class="st">"num"</span>,</span>
+<span id="cb3-98"><a href="#cb3-98" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Model"</span>,                            <span class="st">"tau 0.999"</span>,                    <span class="st">"Threshold τ₀.₉₉₉"</span>,                             <span class="st">"num"</span></span>
+<span id="cb3-99"><a href="#cb3-99" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-100"><a href="#cb3-100" aria-hidden="true" tabindex="-1"></a>pick <span class="sc">|&gt;</span></span>
+<span id="cb3-101"><a href="#cb3-101" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(rob, <span class="at">by =</span> <span class="fu">join_by</span>(group, metric)) <span class="sc">|&gt;</span></span>
+<span id="cb3-102"><a href="#cb3-102" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">c</span>(mean, lo, hi), \(x) <span class="fu">case_when</span>(fmt <span class="sc">==</span> <span class="st">"pct"</span> <span class="sc">~</span> <span class="fu">f_pct</span>(x), fmt <span class="sc">==</span> <span class="st">"int"</span> <span class="sc">~</span> <span class="fu">f_num</span>(x, <span class="dv">1</span>), <span class="at">.default =</span> <span class="fu">f_num</span>(x, <span class="dv">3</span>)))) <span class="sc">|&gt;</span></span>
+<span id="cb3-103"><a href="#cb3-103" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(label, mean, lo, hi) <span class="sc">|&gt;</span></span>
+<span id="cb3-104"><a href="#cb3-104" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gt</span>() <span class="sc">|&gt;</span></span>
+<span id="cb3-105"><a href="#cb3-105" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_header</span>(<span class="at">title =</span> <span class="fu">sprintf</span>(<span class="st">"Headline Results across %d Seeds"</span>, n_seeds),</span>
+<span id="cb3-106"><a href="#cb3-106" aria-hidden="true" tabindex="-1"></a>             <span class="at">subtitle =</span> <span class="fu">sprintf</span>(<span class="st">"False alarms out of %s normal test windows; about %.0f expected at 99.9%%"</span>,</span>
+<span id="cb3-107"><a href="#cb3-107" aria-hidden="true" tabindex="-1"></a>                                <span class="fu">f_int</span>(n_normal_test), n_normal_test <span class="sc">*</span> <span class="fl">0.001</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb3-108"><a href="#cb3-108" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cols_label</span>(<span class="at">label =</span> <span class="st">"Quantity"</span>, <span class="at">mean =</span> <span class="st">"Mean"</span>, <span class="at">lo =</span> <span class="st">"2.5%"</span>, <span class="at">hi =</span> <span class="st">"97.5%"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb3-109"><a href="#cb3-109" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_options</span>(<span class="at">table.font.size =</span> <span class="dv">12</span>)</span>
+<span id="cb3-110"><a href="#cb3-110" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb3-111"><a href="#cb3-111" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-112"><a href="#cb3-112" aria-hidden="true" tabindex="-1"></a>**How to read the table.** Each row is one result, averaged over <span class="in">`r n_seeds`</span> complete re-runs of the study, each with fresh simulated data, a newly trained model and a newly fitted threshold. ROC AUC runs from 0.5, no better than a coin toss, to 1, complete separation of attacks from normal activity. Detection rates are the share of attack windows that raised an alert. The 2.5% and 97.5% columns bracket the middle 95% of re-runs.</span>
+<span id="cb3-113"><a href="#cb3-113" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-114"><a href="#cb3-114" aria-hidden="true" tabindex="-1"></a>**What the table tells you.** The detector reliably catches loud attacks and misses quiet ones: <span class="in">`r f_pct(rob_get("high", "Detection at 99.9% by intensity")$mean)`</span> of high-intensity windows but <span class="in">`r f_pct(rob_get("low", "Detection at 99.9% by intensity")$mean)`</span> of low-intensity ones, and almost no data exfiltration. It does no better than Mahalanobis distance, a classical statistic that needs no training. False alarms average <span class="in">`r f_num(fa999$mean, 1)`</span> against about <span class="in">`r f_num(n_normal_test * 0.001, 0)`</span> expected and vary several-fold between runs. The original AUC of 1.0 came from the simulation design, not the model.</span>
+<span id="cb3-115"><a href="#cb3-115" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-116"><a href="#cb3-116" aria-hidden="true" tabindex="-1"></a><span class="fu">## Recommendations</span></span>
+<span id="cb3-117"><a href="#cb3-117" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-118"><a href="#cb3-118" aria-hidden="true" tabindex="-1"></a>We recommend three governance practices:</span>
+<span id="cb3-119"><a href="#cb3-119" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-120"><a href="#cb3-120" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>**Human-in-the-loop containment, routed by criticality.** Alerts on Tier 1 services (<span class="in">`r paste(tier1, collapse = ", ")`</span>) require human approval before isolation or credential revocation, because isolating them is itself an outage. Automate only low-blast-radius actions, such as step-up authentication or ending a single session, and only after the detector has been validated on production telemetry. At realistic attack rates most alerts at the 99.9% threshold would be false alarms (see the <span class="co">[</span><span class="ot">base-rate table</span><span class="co">](evaluation.qmd#base-rates)</span>), so automated isolation today would mostly hit healthy hosts.</span>
+<span id="cb3-121"><a href="#cb3-121" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-122"><a href="#cb3-122" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>**Explain every alert, and test the explanations.** Report the top three contributing features with each alert. Measure how often they point at the true cause, and compare them against plain z-scores, which did as well here. This aligns with the explainability and model-risk expectations in the <span class="co">[</span><span class="ot">NIST AI Risk Management Framework</span><span class="co">](https://www.nist.gov/itl/ai-risk-management-framework/ai-risk-management-framework-faqs)</span> (voluntary) and <span class="co">[</span><span class="ot">OSFI Guideline E-23</span><span class="co">](https://www.osfi-bsif.gc.ca/en/guidance/guidance-library/guideline-e-23-model-risk-management-2027)</span> (effective May 1, 2027 for federally regulated Canadian financial institutions). Neither one prescribes a specific detector.</span>
+<span id="cb3-123"><a href="#cb3-123" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-124"><a href="#cb3-124" aria-hidden="true" tabindex="-1"></a><span class="ss">3. </span>**Monitor drift by effect size, not significance.** Replace weekly per-feature KS tests with Wasserstein distance per feature (in standard-deviation units, with an effect-size trigger). Track the live alert rate against its expected $1-q$, and refit and re-validate the threshold on a schedule. In the <span class="co">[</span><span class="ot">drift test</span><span class="co">](evaluation.qmd#drift-monitoring)</span>, KS flagged harmless shifts every time, and PSI at standard cut-offs missed a material one.</span>
+<span id="cb3-125"><a href="#cb3-125" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-126"><a href="#cb3-126" aria-hidden="true" tabindex="-1"></a><span class="fu">## Limitations</span></span>
+<span id="cb3-127"><a href="#cb3-127" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-128"><a href="#cb3-128" aria-hidden="true" tabindex="-1"></a>What would change the conclusions:</span>
+<span id="cb3-129"><a href="#cb3-129" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-130"><a href="#cb3-130" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Simulated data.** The latent factors, marginals, correlations, seasonality and host roles are all assumptions. Real telemetry has missing data, logging changes, holidays and populations of very different hosts. Client data would replace the generator in <span class="in">`R/sim.R`</span>: at least four weeks of host-by-window telemetry with an asset inventory.</span>
+<span id="cb3-131"><a href="#cb3-131" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Simulated attacks.** Each attack changes a few features in single windows or short runs. Real campaigns move across hosts and over days. Labelled red-team or incident data would replace <span class="in">`params.yaml: attacks`</span>.</span>
+<span id="cb3-132"><a href="#cb3-132" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Heavy, discrete tail.** Rare count features dominate extreme normal losses, so a single GPD fits poorly and the threshold depends on the chosen level $u$. Per-host or per-role thresholds, or separate models for count features, may change the picture.</span>
+<span id="cb3-133"><a href="#cb3-133" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Fixed threshold.** $\tau_q$ is fitted once. Thresholds that adapt over time, by rolling refit or by time of day, are not implemented.</span>
+<span id="cb3-134"><a href="#cb3-134" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Dependency graph.** The graph, call volumes and tier cut-offs are illustrative. The first-order Markov assumption is stated, not tested. Service-mesh call logs and session traces would replace them.</span>
+<span id="cb3-135"><a href="#cb3-135" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Prevalence.** The test set is about <span class="in">`r f_pct(n_attack_test / (n_attack_test + n_normal_test), 0)`</span> attacks. Real environments are orders of magnitude lower, which is why the base-rate table matters more than the ROC curve.</span>
+<span id="cb3-136"><a href="#cb3-136" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-137"><a href="#cb3-137" aria-hidden="true" tabindex="-1"></a><span class="fu">## Reproducibility</span></span>
+<span id="cb3-138"><a href="#cb3-138" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-139"><a href="#cb3-139" aria-hidden="true" tabindex="-1"></a>Every result can be regenerated from <span class="in">`params.yaml`</span> with one script, <span class="in">`run_all.R`</span>, and package versions are pinned with <span class="in">`renv`</span>. The <span class="co">[</span><span class="ot">Reproducibility</span><span class="co">](reproducibility.qmd)</span> page has step-by-step instructions, result fingerprints for checking a rerun, unit-test results, and the full software environment. The code is on <span class="co">[</span><span class="ot">GitHub</span><span class="co">](https://github.com/patrick-lefler/high-dimensional-cyber-anomaly-detection)</span>.</span>
 </code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
 </div></div></div></div></div>
 </div> <!-- /content -->

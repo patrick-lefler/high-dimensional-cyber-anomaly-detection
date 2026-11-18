@@ -40,7 +40,7 @@ test_that("drift metrics are near zero for identical samples", {
   expect_lt(wasserstein1(x, x), 1e-10)
 })
 
-test_that("rank AUC is 1 for perfect separation and 0.5 for ties", {
+test_that("rank AUC is 1 for complete separation and 0.5 for ties", {
   expect_equal(auc_rank(c(1, 2, 3, 4), c(FALSE, FALSE, TRUE, TRUE)), 1)
   expect_equal(auc_rank(rep(1, 4), c(FALSE, FALSE, TRUE, TRUE)), 0.5)
 })
