@@ -1,0 +1,154 @@
+---
+title: "Service Dependency Graph"
+subtitle: "Cyber Anomaly Detection & Dependency Risk: Markov transition matrix, PageRank, and single-point-of-failure analysis"
+author: Patrick Lefler
+date: "2026-08-13"
+date-modified: "2026-11-18"
+---
+
+```{r}
+#| label: setup
+#| include: false
+source("R/pages/setup.R")
+gt_tab <- graph$table
+g <- graph$graph
+igraph::V(g)$tier <- gt_tab$criticality_tier[match(igraph::V(g)$name, gt_tab$name)]
+igraph::V(g)$pagerank <- gt_tab$pagerank[match(igraph::V(g)$name, gt_tab$name)]
+art_nodes <- gt_tab$name[gt_tab$articulation_point]
+tier1 <- gt_tab |> filter(criticality_tier == "Tier 1") |> pull(name)
+top_pr <- gt_tab |> slice_max(pagerank, n = 3)
+```
+
+## Why a dependency layer
+
+The detector on the [Detector](detector.qmd) page scores each host's activity in 5-minute windows. It says nothing about what happens if the security team responds by isolating that host. Isolating a host that many other services depend on can cause an outage that does more damage than the attack. This page builds the structural layer that answers that question. It ranks services by how much of the enterprise depends on them. The ranking feeds a containment rule on the [Evaluation](evaluation.qmd#containment-routing) page: alerts on the most critical services go to a human before any automated isolation.
+
+The graph is simulated: `r nrow(gt_tab)` services and `r igraph::ecount(g)` dependencies, with call volumes drawn from a log-normal distribution. A real deployment would build it from service-mesh or API-gateway call logs.
+
+## Definitions
+
+**Edge direction.** An edge $i \to j$ means service $i$ calls (depends on) service $j$. The edge weight $w_{ij}$ is the call volume over a fixed period.
+
+**Markov transition matrix.** Follow one request as it moves from service to service. The probability that the next call goes to $j$, given that the request is at $i$, is
+
+$$P_{ij} = \Pr(X_{t+1} = j \mid X_t = i) = \frac{w_{ij}}{\sum_k w_{ik}},$$
+
+so every row of $P$ sums to 1 (row-stochastic). Services that call nothing (for example the key-management service) are *dangling*. Their rows are set to $1/n$, the standard convention: a request that reaches a dead end restarts anywhere.
+
+**The Markov (memoryless) assumption.** The next hop depends only on the current service, not on how the request got there. Real request paths are often session-dependent (authentication, then API, then database), so this is an approximation. With real call traces it can be tested by comparing the fit of first- and second-order transition models. This simulation has no traces, so the assumption is stated, not tested.
+
+**PageRank.** PageRank is the stationary distribution $\pi$ of the walk with random restarts:
+
+$$\pi = \alpha\, \pi P + \frac{1-\alpha}{n}\mathbf{1}^\top .$$
+
+$\pi_j$ is the long-run share of request hops that land on service $j$. We call this **dependency concentration**. It is not the probability that a failure spreads to $j$, and it does not detect single points of failure by itself. The damping factor $\alpha$ is the chance the walk follows a call rather than restarting. The value $\alpha = `r cfg$graph$damping`$ is a web-search convention, not a risk parameter, so we test how sensitive the ranking is to it.
+
+**Single points of failure** are a connectivity question, so we measure them directly:
+
+- *Articulation points:* services whose removal disconnects the graph (treating edges as undirected).
+- *Betweenness:* how many shortest dependency paths pass through a service.
+- *Removal impact:* remove the service and count the share of the other services that can no longer reach at least one dependency they could reach before.
+
+## Computation
+
+```{r}
+#| label: pagerank-check
+pr <- graph$pagerank
+tibble(
+  check = c(
+    "Rows of P sum to 1 (max deviation)",
+    "Power-iteration steps to converge",
+    "L1 change at last step (tolerance)",
+    "Max difference vs igraph::page_rank()"
+  ),
+  value = c(
+    format(max(abs(rowSums(graph$P) - 1)), digits = 2),
+    as.character(pr$iterations),
+    sprintf("%s (%s)", format(pr$l1_change, digits = 2), format(cfg$graph$tol)),
+    format(graph$max_diff_vs_igraph, digits = 2)
+  )
+)
+```
+
+**How to read the table.** Each row is a check that the calculation behaved as intended. The first confirms every row of the transition matrix sums to one, so each service's outgoing calls form a proper probability split. The second and third show how many repeated passes the ranking needed before it stopped changing, and how small the last change was. The final row compares our hand-written ranking with igraph, a widely used network-analysis library.
+
+**What the table tells you.** The calculation is sound. The row sums are exact to rounding error, the ranking settled after `r pr$iterations` passes, and the result agrees with igraph to within `r format(graph$max_diff_vs_igraph, digits = 1)`, which is effectively identical. That matters because the criticality tiers that govern containment decisions rest on these numbers. An error here would silently route the wrong alerts to automation instead of to a person, and nothing downstream would reveal it.
+
+**Damping sensitivity.** Re-ranking the services at $\alpha \in \{`r paste(cfg$graph$damping_sensitivity, collapse = ", ")`\}$ gives a Kendall rank correlation with the $\alpha = `r cfg$graph$damping`$ ranking of at least `r f_num(min(graph$kendall$kendall_tau), 3)`. On this graph the ranking does not depend on the damping choice, although the PageRank values themselves do.
+
+## Dependency map
+
+The map shows which services the rest of the enterprise funnels into. A security response that isolates one of these services can take down everything upstream of it.
+
+```{r}
+#| label: fig-dependency-map
+#| fig-height: 8
+set.seed(cfg$graph$seed)
+ggraph(g, layout = "sugiyama") +
+  geom_edge_link(
+    aes(width = calls), alpha = 0.35, colour = "#52514e",
+    arrow = arrow(length = unit(2.5, "mm"), type = "closed"),
+    end_cap = circle(4, "mm")
+  ) +
+  geom_node_point(aes(size = pagerank, colour = tier)) +
+  geom_node_text(aes(label = name), size = 3.4, repel = TRUE, colour = "#0b0b0b",
+                 bg.colour = "white", bg.r = 0.15, point.padding = unit(3, "mm")) +
+  scale_edge_width(range = c(0.3, 2), name = "Call volume") +
+  scale_size_area(max_size = 14, name = "PageRank") +
+  scale_colour_manual(values = tier_colors, name = "Criticality tier") +
+  guides(colour = guide_legend(override.aes = list(size = 5))) +
+  labs(
+    title = "Simulated Service Dependency Graph",
+    subtitle = "Arrows point from caller to dependency; node size = PageRank (dependency concentration)"
+  ) +
+  theme_void(base_size = 12) +
+  theme(legend.position = "bottom", legend.box = "vertical", plot.title = element_text(face = "bold"),
+        plot.margin = margin(5, 10, 5, 10))
+```
+
+**How to read the plot.** Each dot is a service, and each arrow points from a service to something it depends on: the caller sits at the tail, the dependency at the head. Entry points such as the web portal and mobile app sit at the top, and shared platform services sit at the bottom. Larger dots carry more request traffic in the long run (PageRank), thicker arrows carry more calls, and colour shows the criticality tier assigned further down the page.
+
+**What the plot tells you.** Traffic converges on a handful of shared platform services: `r paste(top_pr$name, collapse = ", ")` have the highest PageRank. Nobody uses these services directly, so they are easy to overlook, yet nearly everything else depends on them. Isolating one in response to an alert could take down much of the estate. The two articulation points, `r paste(art_nodes, collapse = " and ")`, matter for a different reason: removing either splits the map into disconnected pieces.
+
+## Criticality ranking
+
+The table compares the centrality measures side by side, so the containment rule rests on more than one measure.
+
+```{r}
+#| label: tbl-criticality
+gt_tab |>
+  mutate(rank = row_number(), articulation_point = if_else(articulation_point, "Yes", "No")) |>
+  select(rank, name, layer, pagerank, betweenness, articulation_point, removal_impact, criticality_tier) |>
+  gt() |>
+  tab_header(
+    title = "Service Criticality Ranking",
+    subtitle = "Sorted by PageRank; tiers combine connectivity and removal impact"
+  ) |>
+  cols_label(
+    rank = "Rank", name = "Service", layer = "Layer", pagerank = "PageRank",
+    betweenness = "Betweenness", articulation_point = "Articulation point",
+    removal_impact = "Removal impact", criticality_tier = "Tier"
+  ) |>
+  fmt_number(pagerank, decimals = 3) |>
+  fmt_number(betweenness, decimals = 1) |>
+  fmt_percent(removal_impact, decimals = 0) |>
+  tab_options(table.font.size = 12)
+```
+
+**How to read the table.** Each row is a service, sorted by PageRank, its long-run share of request traffic. Betweenness counts how many shortest dependency paths pass through the service. An articulation point is a service whose loss splits the map in two. Removal impact is the share of all other services that lose access to something they need when this one goes down. Tier is the criticality class built from these measures and used by the containment rule below.
+
+**What the table tells you.** The measures disagree, so no single one is enough. PageRank tracks removal impact reasonably well (rank correlation `r f_num(graph$spearman_pr_impact)`), while betweenness does not (`r f_num(graph$spearman_btw_impact)`): shared back-end services score zero betweenness yet cut off most of the estate when removed. Neither articulation point leads the PageRank list. PageRank is a useful first screen for dependency concentration, but containment rules should rest on the combined tiers, not on any single score.
+
+## Criticality tiers and the containment rule {#criticality-tiers}
+
+The tiers are a policy choice built from the measures above:
+
+- **Tier 1:** an articulation point, or removal cuts off at least `r f_pct(cfg$graph$tier1_removal_impact, 0)` of the other services. This gives `r length(tier1)` services: `r paste(tier1, collapse = ", ")`.
+- **Tier 2:** PageRank at or above the median, and not Tier 1 (`r sum(gt_tab$criticality_tier == "Tier 2")` services).
+- **Tier 3:** everything else (`r sum(gt_tab$criticality_tier == "Tier 3")` services).
+
+**Containment rule.** An alert on a Tier 1 asset requires human approval before any isolation or credential revocation, because isolating it is itself an outage. Tier 2 and Tier 3 assets may get automated low-blast-radius actions (step-up authentication, ending a single session) while an analyst reviews. Automated host isolation stays off for every tier until the detector has been validated on production data. The [Evaluation](evaluation.qmd#containment-routing) page applies this rule to the simulated alerts.
+
+## Limitations of this layer
+
+The graph, call volumes and tiers are illustrative. Removal impact treats every dependency as hard: a service is counted as impacted if it loses any dependency, with no allowance for caches, retries or failover replicas. The tier cut-offs are judgment calls and should be set with the service owners. A production version would build $P$ from observed call logs, test the first-order Markov assumption against session traces, and check the tiers against past incidents.

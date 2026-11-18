@@ -1,0 +1,331 @@
+---
+title: "Evaluation"
+subtitle: "Cyber Anomaly Detection & Dependency Risk: detection, baselines, robustness across seeds, base rates, attribution, and drift"
+author: Patrick Lefler
+date: "2026-08-13"
+date-modified: "2026-11-18"
+---
+
+```{r}
+#| label: setup
+#| include: false
+source("R/pages/setup.R")
+test <- main$test
+is_att <- test$label == "Anomaly"
+normal_loss <- test$recon_loss[!is_att]
+wilson <- \(x, n) binom::binom.confint(x, n, methods = "wilson")[, c("lower", "upper")]
+mm <- main$method_metrics
+best_auc <- mm |> slice_max(roc_auc, n = 1)
+camp <- main$campaigns
+null_rate <- filter(main$summary, metric == "Null campaign alert rate")$value
+```
+
+All results on this page come from the simulated test set: `r f_int(n_normal_test)` normal windows from `r cfg$simulation$hosts_test` unseen hosts, plus `r f_int(n_attack_test)` attack windows. Alerts use the held-out EVT thresholds from the [Thresholds](thresholds.qmd) page: $\tau_{0.99} = `r f_num(tau[["q0.99"]], 3)`$ and $\tau_{0.999} = `r f_num(tau[["q0.999"]], 3)`$. Single-run figures use the main seed (`r cfg$seeds$main`). The [robustness](#robustness) section repeats the whole pipeline over `r n_seeds` seeds.
+
+## Reconstruction loss by attack and intensity
+
+It shows how far each kind of attack pushes the loss above normal traffic, and whether it clears the alert line.
+
+```{r}
+#| label: fig-loss-profile
+#| fig-height: 7
+normals <- test |> filter(!is_att) |> select(attack_type, recon_loss)
+plot_df <- bind_rows(
+  map(tier_levels, \(t) mutate(normals, tier = t)) |> bind_rows(),
+  test |> filter(is_att) |> mutate(tier = as.character(tier)) |> select(attack_type, recon_loss, tier)
+) |>
+  mutate(tier = factor(str_to_title(tier), levels = c("Low", "Medium", "High")),
+         attack_type = fct_rev(factor(attack_type, levels = names(attack_colors))))
+ggplot(plot_df, aes(recon_loss, attack_type, fill = attack_type)) +
+  geom_boxplot(outlier.size = 0.6, outlier.alpha = 0.4, width = 0.6, colour = "#52514e") +
+  geom_vline(xintercept = tau[["q0.999"]], linetype = "dashed", colour = "#0b0b0b") +
+  geom_vline(xintercept = tau[["q0.99"]], linetype = "dotted", colour = "#52514e") +
+  scale_x_log10(breaks = c(0.1, 1, 10), labels = c("0.1", "1", "10")) +
+  scale_fill_manual(values = attack_colors, guide = "none") +
+  facet_wrap(~tier, nrow = 1) +
+  labs(title = "Reconstruction Loss by Attack Type and Intensity Tier",
+       subtitle = "Log scale; dashed = 99.9% threshold, dotted = 99% threshold; normal windows repeated in each panel",
+       x = "Reconstruction loss (log scale)", y = NULL)
+```
+
+**How to read the plot.** Each panel is one attack intensity tier. Each box shows the spread of reconstruction loss for one attack type: the middle line is the median, the box spans the middle half of windows, and the dots are unusual values. Grey is normal traffic, repeated in every panel. The horizontal axis is logarithmic. Anything to the right of the dashed line triggers an alert at the 99.9% threshold, and the dotted line is the 99% threshold.
+
+**What the plot tells you.** Normal windows have a median loss of `r f_num(median(normal_loss), 3)` and a 99th percentile of `r f_num(quantile(normal_loss, 0.99), 3)`. Low-intensity attacks look exactly like normal traffic. At high intensity, credential stuffing, privilege escalation, ransomware staging and lateral movement clear the alert line. Exfiltration does not, even at the high tier, because large changes to a few features are diluted in a `r d_features`-feature average. Low-and-slow exfiltration sits wholly inside the normal range.
+
+## Detection scorecard
+
+This is the operational answer: what share of each attack the detector catches, and how often it raises false alarms, with uncertainty attached.
+
+```{r}
+#| label: tbl-scorecard
+score <- test |>
+  summarise(n = n(), x990 = sum(flag_990), x999 = sum(flag_999), .by = c(label, attack_type, tier)) |>
+  mutate(
+    kind = if_else(label == "Normal", "False-alarm rate (normal)", "Detection rate (attacks)"),
+    tier = if_else(is.na(tier), "–", str_to_title(as.character(tier))),
+    r990 = x990 / n, r999 = x999 / n,
+    ci = map2(x999, n, wilson)
+  ) |>
+  unnest_wider(ci) |>
+  arrange(kind == "Detection rate (attacks)", attack_type, factor(tier, levels = c("–", "Low", "Medium", "High"))) |>
+  select(kind, attack_type, tier, n, r990, r999, lower, upper)
+score |>
+  gt(groupname_col = "kind") |>
+  tab_header(title = "Detection Scorecard by Attack Type and Intensity",
+             subtitle = "Main seed; 95% Wilson interval for the 99.9% rate") |>
+  cols_label(attack_type = "Class", tier = "Intensity", n = "Windows", r990 = "Rate at 99.0%",
+             r999 = "Rate at 99.9%", lower = "95% CI low", upper = "95% CI high") |>
+  fmt_percent(c(r990, r999, lower, upper), decimals = 1) |>
+  fmt_integer(n) |>
+  data_color(columns = c(r990, r999), rows = kind == "Detection rate (attacks)",
+             palette = c("#f0efec", "#7fc8a9", "#008300"), domain = c(0, 1)) |>
+  data_color(columns = c(r990, r999), rows = kind == "False-alarm rate (normal)",
+             palette = c("#008300", "#f0efec"), domain = c(0, 0.02)) |>
+  tab_options(table.font.size = 12, row_group.font.weight = "bold")
+```
+
+**How to read the table.** The top block shows how often normal windows were wrongly flagged, where lower is better. The bottom block shows the share of each attack caught, by type and intensity, where higher is better. Greener cells are better in both blocks. The two rate columns use the 99% and 99.9% thresholds. The interval columns give the plausible range for the 99.9% rate, given how many windows were tested.
+
+**What the table tells you.** At 99.9%, high-intensity credential stuffing, privilege escalation, ransomware staging and lateral movement are caught almost every time. At medium intensity only ransomware staging is caught reliably, and low-intensity attacks are essentially never caught. Exfiltration is missed at every tier. Only `r sum(camp$hit)` of `r nrow(camp)` low-and-slow campaigns raised any alert, while normal stretches of the same length raise one `r f_pct(null_rate)` of the time: no better than chance.
+
+## Detection frontiers
+
+The curves show detection against false alarms at every possible threshold, for the autoencoder and for simpler alternatives.
+
+```{r}
+#| label: fig-frontiers
+#| fig-height: 6
+truth <- factor(if_else(is_att, "Anomaly", "Normal"), levels = c("Anomaly", "Normal"))
+curves <- imap(main$scores_test, \(s, m) {
+  df <- tibble(truth = truth, score = s)
+  list(
+    roc = yardstick::roc_curve(df, truth, score, event_level = "first") |> mutate(method = m),
+    pr = yardstick::pr_curve(df, truth, score, event_level = "first") |> mutate(method = m)
+  )
+})
+method_colors <- setNames(c("#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300"), names(main$scores_test))
+p_roc <- map(curves, "roc") |> bind_rows() |>
+  ggplot(aes(1 - specificity, sensitivity, colour = method)) +
+  geom_abline(linetype = "dashed", colour = "#c3c2b7") +
+  geom_line(linewidth = 0.8) +
+  scale_colour_manual(values = method_colors, name = NULL) +
+  labs(title = "ROC Frontier", x = "False-positive rate", y = "True-positive rate")
+p_pr <- map(curves, "pr") |> bind_rows() |>
+  ggplot(aes(recall, precision, colour = method)) +
+  geom_hline(yintercept = mean(is_att), linetype = "dashed", colour = "#c3c2b7") +
+  geom_line(linewidth = 0.8) +
+  scale_colour_manual(values = method_colors, name = NULL) +
+  labs(title = "Precision-Recall Frontier", x = "Recall", y = "Precision")
+(p_roc + p_pr) + plot_layout(guides = "collect") & theme(legend.position = "bottom")
+```
+
+**How to read the plots.** *Left:* the share of attacks caught against the share of normal windows wrongly flagged, as the threshold slides from strict to loose. Curves nearer the top-left are better, and the dashed diagonal is random guessing. *Right:* the share of alerts that are real (precision) against the share of attacks caught (recall). The dashed line marks the attack share in this test set, `r f_pct(mean(is_att))`, far above any real environment.
+
+**What the plots tell you.** All six methods trace almost the same curves. The autoencoder's ROC AUC is `r f_num(filter(mm, method == ae_label)$roc_auc, 3)`, and the best method on this run is `r best_auc$method` at `r f_num(best_auc$roc_auc, 3)`. Every ROC curve rises steeply and then flattens, because low-intensity attacks look like normal traffic to every method. Precision looks respectable only because attacks make up `r f_pct(mean(is_att))` of this test set. The base-rate table below shows realistic prevalence.
+
+## Baselines {#baselines}
+
+A neural network is only worth its complexity if it beats simple statistics on the same data.
+
+```{r}
+#| label: tbl-baselines
+auc_seeds <- rob |>
+  filter(group == "ROC AUC by method") |>
+  transmute(method = metric, auc_seeds = sprintf("%.3f [%.3f–%.3f]", mean, lo, hi))
+mm |>
+  left_join(auc_seeds, by = join_by(method)) |>
+  select(method, roc_auc, auc_seeds, pr_auc, false_alarm_rate, det_low, det_medium, det_high, det_low_slow) |>
+  gt() |>
+  tab_header(title = "Autoencoder vs Baseline Detectors",
+             subtitle = "Each method thresholded at its own 99.9% held-out quantile (0.1% nominal false-positive rate)") |>
+  cols_label(method = "Method", roc_auc = "ROC AUC", auc_seeds = sprintf("ROC AUC, %d seeds", n_seeds),
+             pr_auc = "PR AUC", false_alarm_rate = "False-alarm rate", det_low = "Low", det_medium = "Medium",
+             det_high = "High", det_low_slow = "Low-and-slow") |>
+  tab_spanner("Main seed", c(roc_auc, pr_auc, false_alarm_rate)) |>
+  tab_spanner("Detection at 0.1% FPR by tier", c(det_low, det_medium, det_high, det_low_slow)) |>
+  fmt_number(c(roc_auc, pr_auc), decimals = 3) |>
+  fmt_percent(c(false_alarm_rate, det_low, det_medium, det_high, det_low_slow), decimals = 1) |>
+  tab_options(table.font.size = 12)
+```
+
+**How to read the table.** Each row is a detector applied to the same data. The two z-score methods measure how far a window sits from average, feature by feature. PCA is the linear equivalent of the autoencoder. Mahalanobis distance measures distance from average while allowing for correlations. Isolation Forest is a standard tree-based detector. Every method gets the same 0.1% false-alarm budget, so the detection columns compare like with like.
+
+**What the table tells you.** The autoencoder does not beat the simple baselines. Mahalanobis distance has the highest ROC AUC on this run and across seeds (`r f_rob("Mahalanobis distance", "ROC AUC by method", \(x) f_num(x, 3))` against `r f_rob(ae_label, "ROC AUC by method", \(x) f_num(x, 3))` for the autoencoder) and catches more medium-intensity attacks. When normal data are correlated and roughly bell-shaped, a classical covariance model is hard to beat, and the autoencoder is in effect a learned approximation of one.
+
+## Robustness across seeds {#robustness}
+
+Any single run is one random draw. This table repeats the full pipeline (new data, new training, new EVT fit) `r n_seeds` times.
+
+```{r}
+#| label: tbl-robustness
+rob |>
+  filter(group %in% c("Model", "Detection at 99.9% by intensity", "Detection at 99.9% by attack")) |>
+  mutate(
+    is_pct = group != "Model" | str_detect(metric, "campaign"),
+    across(c(mean, lo, hi), \(x) if_else(is_pct, f_pct(x), if_else(str_detect(metric, "False alarms|epoch"), f_num(x, 1), f_num(x, 3)))),
+    metric = if_else(group == "Detection at 99.9% by intensity", paste(str_to_title(metric), "tier"), metric),
+    group = recode(group, Model = "Model, threshold and false alarms")
+  ) |>
+  select(group, metric, mean, lo, hi) |>
+  gt(groupname_col = "group") |>
+  tab_header(title = sprintf("Pipeline Results across %d Seeds", n_seeds),
+             subtitle = sprintf("False alarms are counts out of about %s normal test windows (expected about %.0f at 99.9%%)",
+                                f_int(n_normal_test), n_normal_test * 0.001)) |>
+  cols_label(metric = "Quantity", mean = "Mean", lo = "2.5%", hi = "97.5%") |>
+  tab_options(table.font.size = 12, row_group.font.weight = "bold")
+```
+
+**How to read the table.** Each row summarises one result across `r n_seeds` independent repeats of the whole analysis, each with fresh simulated data, a newly trained model and a newly fitted threshold. "Mean" is the average, and the 2.5% and 97.5% columns bracket the middle 95% of repeats. False alarms are counts out of about `r f_int(n_normal_test)` normal windows. Detection rates are the shares of attack windows that raised an alert.
+
+**What the table tells you.** False alarms at 99.9% averaged `r f_num(rob_get("False alarms at 99.9%")$mean, 1)` against about `r f_num(n_normal_test * 0.001, 0)` expected and ranged from `r f_num(rob_get("False alarms at 99.9%")$lo, 0)` to `r f_num(rob_get("False alarms at 99.9%")$hi, 0)`. Zero false alarms occurred in only `r f_pct(rob_get("False alarms at 99.9%")$share_zero, 0)` of repeats, so the original single-run claim of none was luck. The tail shape ranged from `r f_num(rob_get("GPD shape xi")$lo)` to `r f_num(rob_get("GPD shape xi")$hi)` and the 99.9% threshold from `r f_num(rob_get("tau 0.999")$lo)` to `r f_num(rob_get("tau 0.999")$hi)`, so any single threshold is one draw from a wide range. Detection by intensity is stable: about `r f_pct(rob_get("low", "Detection at 99.9% by intensity")$mean)` at low, `r f_pct(rob_get("medium", "Detection at 99.9% by intensity")$mean)` at medium and `r f_pct(rob_get("high", "Detection at 99.9% by intensity")$mean)` at high intensity.
+
+## Base rates: what an analyst would see {#base-rates}
+
+Attacks make up `r f_pct(mean(is_att))` of the test set. In production they are far rarer, and that changes what an alert means.
+
+```{r}
+#| label: tbl-base-rates
+vol <- cfg$operations$windows_per_day
+win_att <- is_att & test$attack_type != "Low-and-Slow Exfiltration"
+rates <- tibble(
+  q = c(0.99, 0.999),
+  fpr = c(mean(test$flag_990[!is_att]), mean(test$flag_999[!is_att])),
+  tpr = c(mean(test$flag_990[win_att]), mean(test$flag_999[win_att]))
+)
+tidyr::expand_grid(rates, prevalence = unlist(cfg$operations$prevalence)) |>
+  mutate(
+    fp_day = fpr * vol * (1 - prevalence),
+    tp_day = tpr * vol * prevalence,
+    precision = tp_day / (tp_day + fp_day),
+    q = paste0(formatC(100 * q, format = "f", digits = 1), "% threshold")
+  ) |>
+  select(q, prevalence, fpr, tpr, fp_day, tp_day, precision) |>
+  gt(groupname_col = "q") |>
+  tab_header(title = "Alerts per Day and Precision at Realistic Prevalence",
+             subtitle = sprintf("Assumed %s scored windows per day; rates observed on the main-seed test set", f_int(vol))) |>
+  cols_label(prevalence = "Attack prevalence", fpr = "False-alarm rate", tpr = "Detection rate",
+             fp_day = "False alarms / day", tp_day = "True alerts / day", precision = "Precision") |>
+  fmt_scientific(prevalence, decimals = 0) |>
+  fmt_percent(c(fpr, tpr), decimals = 2) |>
+  fmt_number(c(fp_day, tp_day), decimals = 0) |>
+  fmt_percent(precision, decimals = 1) |>
+  tab_options(table.font.size = 12, row_group.font.weight = "bold")
+```
+
+**How to read the table.** Each row assumes a share of windows that are truly malicious, the prevalence (1e-4 means 1 in 10,000), and a volume of `r f_int(vol)` windows a day. False and true alerts per day follow from the false-alarm and detection rates observed in testing. Precision is the share of alerts that are real attacks. The upper block uses the 99% threshold and the lower block the stricter 99.9% threshold.
+
+**What the table tells you.** At one attack per 100,000 windows, even the 99.9% threshold produces about `r f_int(rates$fpr[2] * vol)` false alarms a day, and fewer than `r ceiling(100 * rates$tpr[2] * 1e-5 / (rates$tpr[2] * 1e-5 + rates$fpr[2]))`% of alerts are real. The near-ideal precision in the original report came entirely from a test set that was `r f_pct(mean(is_att))` attacks. Deeper thresholds, which only the fitted tail can supply, and corroboration from other signals are both needed before these alerts could drive action.
+
+## Root-cause attribution
+
+An alert is only actionable if the analyst can see which telemetry caused it.
+
+```{r}
+#| label: fig-attribution-heatmap
+#| fig-height: 8
+set.seed(cfg$seeds$main)
+resid <- main$residuals
+colnames(resid) <- feature_cols
+sample_rows <- test |>
+  mutate(row_id = row_number()) |>
+  filter(is_att, flag_999) |>
+  slice_sample(n = 6, by = attack_type) |>
+  arrange(attack_type, tier) |>
+  mutate(incident = paste0(attack_type, " (", tier, ") #", row_number()), .by = attack_type)
+as_tibble(resid[sample_rows$row_id, , drop = FALSE]) |>
+  mutate(incident = factor(sample_rows$incident, levels = rev(sample_rows$incident))) |>
+  pivot_longer(-incident, names_to = "feature", values_to = "residual") |>
+  mutate(feature = factor(feature, levels = feature_cols)) |>
+  ggplot(aes(feature, incident, fill = residual)) +
+  geom_tile(colour = "white", linewidth = 0.4) +
+  scale_fill_gradient(low = "#f0efec", high = "#1f4e8c", name = "|x − x̂|") +
+  labs(title = "Feature-Level Reconstruction Error for Detected Attacks",
+       subtitle = "Random sample of up to 6 detected windows per attack type (99.9% threshold)",
+       x = NULL, y = NULL) +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1, size = 9), axis.text.y = element_text(size = 9),
+        panel.grid = element_blank())
+```
+
+**How to read the plot.** Each row is one detected attack window, chosen at random and labelled with its attack type and intensity. Each column is one telemetry feature. Darker blue means the model reconstructed that feature badly in that window, which marks it as a likely cause of the alert. Pale cells are features the model reproduced well. An analyst would use this view to see at a glance why an alert fired.
+
+**What the plot tells you.** Most attack types light up a feature the attack actually changed: source IPs for credential stuffing, privilege escalations for privilege escalation, DNS queries and file writes for ransomware staging, and new service creations for lateral movement. The few exfiltration windows that were detected are different. Their darkest cell is an unrelated spike, not bytes or session length, so they were flagged for the wrong reason. The sample is drawn only from detected, mostly high-intensity windows.
+
+```{r}
+#| label: tbl-attribution
+analysis$attribution |>
+  gt() |>
+  tab_header(title = "Does the Top-3 Attribution Point at the Injected Features?",
+             subtitle = "Share of detected attack windows whose 3 largest contributors include an injected feature") |>
+  cols_label(attack_type = "Attack type", n = "Detected windows", ae_top3 = "Autoencoder residuals",
+             z_top3 = "Plain |z|-scores") |>
+  fmt_percent(c(ae_top3, z_top3), decimals = 0) |>
+  tab_options(table.font.size = 12)
+```
+
+**How to read the table.** For each detected attack window we listed the three features with the largest reconstruction error and checked whether at least one of them was a feature the attack actually changed. The middle column applies this test to the autoencoder's errors. The last column repeats it using each feature's plain distance from average, with no model involved. "Detected windows" shows how many alerts each percentage rests on.
+
+**What the table tells you.** Wherever there are enough detections to judge, both methods place a changed feature in the top three every time. Attribution works, but it does not need the autoencoder: plain distance from average does just as well. The test is also lenient. The exfiltration windows count as hits because a changed feature ranks second or third, although the alert was driven by something else. A stricter top-one test would be more informative.
+
+## Containment routing {#containment-routing}
+
+This is where the two layers meet. An alert's response depends on how critical the affected service is, using the tiers from the [Dependency Graph](dependency-graph.qmd#criticality-tiers) page.
+
+```{r}
+#| label: tbl-routing
+policy <- c(
+  "Tier 1" = "Human approval before any isolation or credential revocation",
+  "Tier 2" = "Automated step-up authentication / single-session termination; analyst review",
+  "Tier 3" = "Automated step-up authentication / single-session termination; analyst review"
+)
+analysis$routing |>
+  pivot_wider(names_from = label, values_from = n, values_fill = 0) |>
+  mutate(policy = policy[criticality_tier], share_false = Normal / (Anomaly + Normal)) |>
+  select(criticality_tier, Anomaly, Normal, share_false, policy) |>
+  gt() |>
+  tab_header(title = "Alert Routing by Service Criticality",
+             subtitle = "Main-seed alerts at the 99.9% threshold; each test window mapped to a service at random") |>
+  cols_label(criticality_tier = "Service tier", Anomaly = "True attack alerts", Normal = "False alarms",
+             share_false = "Share false", policy = "Response until production validation") |>
+  fmt_percent(share_false, decimals = 1) |>
+  tab_options(table.font.size = 12)
+```
+
+**How to read the table.** Each row is a criticality tier from the dependency graph. The counts show how many of this run's alerts at the 99.9% threshold would land on services in that tier, split into real attacks and false alarms. The final column gives the response the containment rule allows until the detector is validated on production data. Test windows are assigned to services at random here, standing in for an asset inventory.
+
+**What the table tells you.** In this run `r f_pct(with(analysis$routing, sum(n[criticality_tier == "Tier 1"]) / sum(n)), 0)` of alerts land on Tier 1 services, where isolation is itself an outage, so they wait for a person. No tier gets automated host isolation yet. False alarms are a small share of these alerts only because attacks are so common in the test set. At realistic prevalence they would dominate, and automated isolation would mostly cut off healthy hosts.
+
+## Drift monitoring
+
+The original recommendation was a weekly Kolmogorov-Smirnov (KS) test on every feature at $p < 0.01$. This table tests that rule and two alternatives on a simulated week from `r cfg$drift$week_hosts` new hosts (`r f_int(analysis$alert_rate$n[1])` windows).
+
+```{r}
+#| label: tbl-drift
+dr <- analysis$drift
+dr |>
+  summarise(
+    ks_shifted = sum(shifted & ks_p_holm < cfg$drift$ks_alpha),
+    ks_other = sum(!shifted & ks_p_holm < cfg$drift$ks_alpha),
+    psi_shifted = max(psi[shifted]),
+    psi_other = max(psi[!shifted]),
+    w_shifted = max(wasserstein[shifted]),
+    w_other = max(wasserstein[!shifted]),
+    .by = scenario
+  ) |>
+  left_join(select(analysis$alert_rate, scenario, alert_rate), by = join_by(scenario)) |>
+  gt() |>
+  tab_header(title = "Which Drift Metric Flags Which Change?",
+             subtitle = sprintf("Two features shifted; KS uses Holm correction across %d features", d_features)) |>
+  cols_label(scenario = "Scenario", ks_shifted = "Shifted (of 2)", ks_other = sprintf("Others (of %d)", d_features - 2),
+             psi_shifted = "Shifted", psi_other = "Others", w_shifted = "Shifted", w_other = "Others",
+             alert_rate = "Alert rate at 99.9%") |>
+  tab_spanner(sprintf("KS flags (p < %s)", cfg$drift$ks_alpha), c(ks_shifted, ks_other)) |>
+  tab_spanner("Max PSI", c(psi_shifted, psi_other)) |>
+  tab_spanner("Max Wasserstein (SD units)", c(w_shifted, w_other)) |>
+  fmt_number(c(psi_shifted, psi_other, w_shifted, w_other), decimals = 3) |>
+  fmt_percent(alert_rate, decimals = 2) |>
+  tab_options(table.font.size = 12)
+```
+
+**How to read the table.** Each row is one version of a simulated new week: unchanged, with two features nudged by a trivial `r cfg$drift$harmless_shift_sd` standard deviations, or by a material `r cfg$drift$material_shift_sd`. The KS columns count features that a significance test flags as changed. PSI is a common stability index, read as "watch" above `r cfg$drift$psi_watch` and "act" above `r cfg$drift$psi_alert`. Wasserstein distance is the size of the shift in standard deviations. The alert rate should stay near 0.1%.
+
+**What the table tells you.** The significance test fails both ways. It flags the trivial shift as firmly as the material one, and it flags `r unique(dr |> summarise(n = sum(!shifted & ks_p_holm < cfg$drift$ks_alpha), .by = scenario) |> pull(n))` untouched features in every scenario because new hosts differ slightly. PSI misses the material shift (maximum `r f_num(max(dr$psi[dr$shifted]), 3)`). Wasserstein distance reads the shift size directly and separates trivial from material. The alert rate barely moved, so it cannot be the only monitor either.

@@ -1,0 +1,3708 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.26">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Patrick Lefler">
+<meta name="dcterms.date" content="2026-08-13">
+
+<title>Alert Thresholds: Extreme Value Theory – Cyber Anomaly Detection &amp; Dependency Risk</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<link href="./evaluation.html" rel="next">
+<link href="./detector.html" rel="prev">
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-f194567e5c6efeb013b28392ff62c8b4.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-fee303ae6e2651b1828198bac5dac9d1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-f194567e5c6efeb013b28392ff62c8b4.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-060842c2b6356e1cad3995fa8ec09a76.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-060842c2b6356e1cad3995fa8ec09a76.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-060842c2b6356e1cad3995fa8ec09a76.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script src="site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>html{ scroll-behavior: smooth; }</style>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./thresholds.html">Thresholds</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Cyber Anomaly Detection &amp; Dependency Risk</a> 
+    </div>
+      </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Overview</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dependency-graph.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Dependency Graph</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./detector.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Detector</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./thresholds.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Thresholds</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./evaluation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Evaluation</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Contents</h2>
+   
+  <ul>
+  <li><a href="#what-the-threshold-is-and-is-not" id="toc-what-the-threshold-is-and-is-not" class="nav-link active" data-scroll-target="#what-the-threshold-is-and-is-not">What the threshold is, and is not</a></li>
+  <li><a href="#fitted-parameters" id="toc-fitted-parameters" class="nav-link" data-scroll-target="#fitted-parameters">Fitted parameters</a></li>
+  <li><a href="#what-drives-the-normal-tail" id="toc-what-drives-the-normal-tail" class="nav-link" data-scroll-target="#what-drives-the-normal-tail">What drives the normal tail</a></li>
+  <li><a href="#threshold-diagnostics" id="toc-threshold-diagnostics" class="nav-link" data-scroll-target="#threshold-diagnostics">Threshold diagnostics</a></li>
+  <li><a href="#thresholds-and-their-uncertainty" id="toc-thresholds-and-their-uncertainty" class="nav-link" data-scroll-target="#thresholds-and-their-uncertainty">Thresholds and their uncertainty</a></li>
+  <li><a href="#calibration-on-new-hosts" id="toc-calibration-on-new-hosts" class="nav-link" data-scroll-target="#calibration-on-new-hosts">Calibration on new hosts</a></li>
+  <li><a href="#clustering-of-alerts" id="toc-clustering-of-alerts" class="nav-link" data-scroll-target="#clustering-of-alerts">Clustering of alerts</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content column-body" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<div class="quarto-title-block"><div><h1 class="title">Alert Thresholds: Extreme Value Theory</h1><button type="button" class="btn code-tools-button dropdown-toggle" id="quarto-code-tools-menu" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi"></i> Code</button><ul class="dropdown-menu dropdown-menu-end" aria-labelelledby="quarto-code-tools-menu"><li><a id="quarto-show-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Show All Code</a></li><li><a id="quarto-hide-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Hide All Code</a></li><li><hr class="dropdown-divider"></li><li><a id="quarto-view-source" class="dropdown-item" href="javascript:void(0)" role="button">View Source</a></li></ul></div></div>
+<p class="subtitle lead">Cyber Anomaly Detection &amp; Dependency Risk: peaks-over-threshold fitting, uncertainty, diagnostics, and calibration</p>
+</div>
+
+
+
+<div class="quarto-title-meta column-body">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Patrick Lefler </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">August 13, 2026</p>
+    </div>
+  </div>
+  
+    <div>
+    <div class="quarto-title-meta-heading">Modified</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date-modified">November 18, 2026</p>
+    </div>
+  </div>
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="what-the-threshold-is-and-is-not" class="level2">
+<h2 class="anchored" data-anchor-id="what-the-threshold-is-and-is-not">What the threshold is, and is not</h2>
+<p>Every window gets a reconstruction loss <span class="math inline">\(\ell(\mathbf{x})\)</span> from the <a href="./detector.html">Detector</a>. An alert fires when <span class="math inline">\(\ell(\mathbf{x}) &gt; \tau_q\)</span>. Here <span class="math inline">\(\tau_q\)</span> is the <strong><span class="math inline">\(q\)</span>-quantile threshold</strong> of the loss for normal windows: a normal window exceeds it with probability <span class="math inline">\(1 - q\)</span>. “The 99.9% threshold” therefore means an exceedance probability of 0.1% per normal window. It is not a confidence level. It is also not adaptive: <span class="math inline">\(\tau_q\)</span> is estimated once and then fixed. Refitting it on a rolling window or by time of day is listed as further work.</p>
+<p><strong>Peaks over threshold (POT).</strong> Above a high level <span class="math inline">\(u\)</span>, the excesses <span class="math inline">\(\ell - u\)</span> are modelled with a Generalized Pareto Distribution (GPD) with scale <span class="math inline">\(\sigma\)</span> and shape <span class="math inline">\(\xi\)</span>. With <span class="math inline">\(N\)</span> windows, <span class="math inline">\(N_u\)</span> of which exceed <span class="math inline">\(u\)</span>,</p>
+<p><span class="math display">\[
+\tau_q =
+\begin{cases}
+u + \dfrac{\sigma}{\xi}\left[\left(\dfrac{N}{N_u}(1-q)\right)^{-\xi} - 1\right], &amp; \xi \neq 0,\\[2ex]
+u + \sigma \ln\!\left(\dfrac{N_u}{N(1-q)}\right), &amp; \xi = 0 .
+\end{cases}
+\]</span></p>
+<p>The second line is the exponential limit. The code (<code>gpd_tau()</code> in <code>R/evt.R</code>) switches to it when <span class="math inline">\(|\xi| &lt; 10^{-6}\)</span>, and a unit test checks that it returns a finite value at <span class="math inline">\(\xi = 0\)</span>.</p>
+<p><strong>Held-out fitting.</strong> The GPD is fitted to losses from the 4 <strong>validation hosts</strong> (16,128 windows), which the autoencoder never trained on. Training losses are biased low, because the model has seen those windows. Their fit is kept only as a comparison row. We set <span class="math inline">\(u\)</span> at the 95% quantile.</p>
+</section>
+<section id="fitted-parameters" class="level2">
+<h2 class="anchored" data-anchor-id="fitted-parameters">Fitted parameters</h2>
+<p>Without the fitted parameters a reader can’t judge the shape of the tail or check the threshold arithmetic. The original report did not show them.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Display code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>pm <span class="ot">&lt;-</span> \(est, se) <span class="fu">sprintf</span>(<span class="st">"%.3f (%.3f)"</span>, est, se)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>fit_row <span class="ot">&lt;-</span> \(p, label, losses) <span class="fu">tibble</span>(</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">fit =</span> label, <span class="at">u =</span> p<span class="sc">$</span>u, <span class="at">Nu =</span> p<span class="sc">$</span>Nu, <span class="at">N =</span> p<span class="sc">$</span>N,</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">sigma =</span> <span class="fu">pm</span>(p<span class="sc">$</span>sigma, p<span class="sc">$</span>se[[<span class="st">"scale"</span>]]), <span class="at">xi =</span> <span class="fu">pm</span>(p<span class="sc">$</span>xi, p<span class="sc">$</span>se[[<span class="st">"shape"</span>]]),</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">tau_990 =</span> <span class="fu">pot_taus</span>(p, <span class="fl">0.99</span>), <span class="at">tau_999 =</span> <span class="fu">pot_taus</span>(p, <span class="fl">0.999</span>),</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">emp_990 =</span> <span class="fu">quantile</span>(losses, <span class="fl">0.99</span>), <span class="at">emp_999 =</span> <span class="fu">quantile</span>(losses, <span class="fl">0.999</span>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">bind_rows</span>(</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit_row</span>(pot, <span class="st">"Held-out validation losses (used for alerts)"</span>, main<span class="sc">$</span>loss_val),</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit_row</span>(pot_tr, <span class="st">"Training losses (comparison only)"</span>, main<span class="sc">$</span>loss_train)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gt</span>() <span class="sc">|&gt;</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_header</span>(<span class="at">title =</span> <span class="st">"Generalized Pareto Fit to the Loss Tail"</span>, <span class="at">subtitle =</span> <span class="st">"Standard errors in brackets"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cols_label</span>(<span class="at">fit =</span> <span class="st">"Fitted on"</span>, <span class="at">u =</span> <span class="st">"u"</span>, <span class="at">Nu =</span> <span class="st">"N_u"</span>, <span class="at">N =</span> <span class="st">"N"</span>, <span class="at">sigma =</span> <span class="st">"σ (SE)"</span>, <span class="at">xi =</span> <span class="st">"ξ (SE)"</span>,</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>             <span class="at">tau_990 =</span> <span class="st">"τ 0.99"</span>, <span class="at">tau_999 =</span> <span class="st">"τ 0.999"</span>, <span class="at">emp_990 =</span> <span class="st">"Empirical 99%"</span>, <span class="at">emp_999 =</span> <span class="st">"Empirical 99.9%"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_spanner</span>(<span class="st">"EVT thresholds"</span>, <span class="fu">c</span>(tau_990, tau_999)) <span class="sc">|&gt;</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_spanner</span>(<span class="st">"Empirical quantiles"</span>, <span class="fu">c</span>(emp_990, emp_999)) <span class="sc">|&gt;</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fmt_number</span>(<span class="fu">c</span>(u, tau_990, tau_999, emp_990, emp_999), <span class="at">decimals =</span> <span class="dv">3</span>) <span class="sc">|&gt;</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fmt_integer</span>(<span class="fu">c</span>(Nu, N)) <span class="sc">|&gt;</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_options</span>(<span class="at">table.font.size =</span> <span class="dv">12</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div id="tbl-gpd-fit" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl quarto-uncaptioned" id="tbl-gpd-fit-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;1
+</figcaption>
+<div aria-describedby="tbl-gpd-fit-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<div id="junvdfassc" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#junvdfassc table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#junvdfassc thead, #junvdfassc tbody, #junvdfassc tfoot, #junvdfassc tr, #junvdfassc td, #junvdfassc th {
+  border-style: none;
+}
+
+#junvdfassc p {
+  margin: 0;
+  padding: 0;
+}
+
+#junvdfassc .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 12px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#junvdfassc .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#junvdfassc .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#junvdfassc .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#junvdfassc .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#junvdfassc .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#junvdfassc .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#junvdfassc .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#junvdfassc .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#junvdfassc .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#junvdfassc .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#junvdfassc .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#junvdfassc .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#junvdfassc .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#junvdfassc .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#junvdfassc .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#junvdfassc .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#junvdfassc .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#junvdfassc .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#junvdfassc .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#junvdfassc .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#junvdfassc .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#junvdfassc .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#junvdfassc .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#junvdfassc .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#junvdfassc .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#junvdfassc .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#junvdfassc .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#junvdfassc .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#junvdfassc .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#junvdfassc .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#junvdfassc .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#junvdfassc .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#junvdfassc .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#junvdfassc .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#junvdfassc .gt_left {
+  text-align: left;
+}
+
+#junvdfassc .gt_center {
+  text-align: center;
+}
+
+#junvdfassc .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#junvdfassc .gt_font_normal {
+  font-weight: normal;
+}
+
+#junvdfassc .gt_font_bold {
+  font-weight: bold;
+}
+
+#junvdfassc .gt_font_italic {
+  font-style: italic;
+}
+
+#junvdfassc .gt_super {
+  font-size: 65%;
+}
+
+#junvdfassc .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#junvdfassc .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#junvdfassc .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#junvdfassc .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#junvdfassc .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#junvdfassc .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#junvdfassc .gt_indent_5 {
+  text-indent: 25px;
+}
+
+#junvdfassc .katex-display {
+  display: inline-flex !important;
+  margin-bottom: 0.75em !important;
+}
+
+#junvdfassc div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+  height: 0px !important;
+}
+</style>
+
+<table class="gt_table do-not-create-environment caption-top table table-sm table-striped small" data-quarto-bootstrap="false">
+<colgroup>
+<col style="width: 10%">
+<col style="width: 10%">
+<col style="width: 10%">
+<col style="width: 10%">
+<col style="width: 10%">
+<col style="width: 10%">
+<col style="width: 10%">
+<col style="width: 10%">
+<col style="width: 10%">
+<col style="width: 10%">
+</colgroup>
+<thead>
+<tr class="gt_heading header">
+<td colspan="10" class="gt_heading gt_title gt_font_normal">Generalized Pareto Fit to the Loss Tail</td>
+</tr>
+<tr class="gt_heading even">
+<td colspan="10" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border">Standard errors in brackets</td>
+</tr>
+<tr class="gt_col_headings gt_spanner_row header">
+<th rowspan="2" id="fit" class="gt_col_heading gt_columns_bottom_border gt_left" data-quarto-table-cell-role="th" scope="col">Fitted on</th>
+<th rowspan="2" id="u" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">u</th>
+<th rowspan="2" id="Nu" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">N_u</th>
+<th rowspan="2" id="N" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">N</th>
+<th rowspan="2" id="sigma" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">σ (SE)</th>
+<th rowspan="2" id="xi" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">ξ (SE)</th>
+<th colspan="2" id="EVT thresholds" class="gt_center gt_columns_top_border gt_column_spanner_outer" data-quarto-table-cell-role="th" scope="colgroup"><div class="gt_column_spanner">
+EVT thresholds
+</div></th>
+<th colspan="2" id="Empirical quantiles" class="gt_center gt_columns_top_border gt_column_spanner_outer" data-quarto-table-cell-role="th" scope="colgroup"><div class="gt_column_spanner">
+Empirical quantiles
+</div></th>
+</tr>
+<tr class="gt_col_headings even">
+<th id="tau_990" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">τ 0.99</th>
+<th id="tau_999" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">τ 0.999</th>
+<th id="emp_990" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Empirical 99%</th>
+<th id="emp_999" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Empirical 99.9%</th>
+</tr>
+</thead>
+<tbody class="gt_table_body">
+<tr class="odd">
+<td class="gt_row gt_left" headers="fit">Held-out validation losses (used for alerts)</td>
+<td class="gt_row gt_right" headers="u">1.296</td>
+<td class="gt_row gt_right" headers="Nu">807</td>
+<td class="gt_row gt_right" headers="N">16,128</td>
+<td class="gt_row gt_right" headers="sigma">0.251 (0.014)</td>
+<td class="gt_row gt_right" headers="xi">0.381 (0.046)</td>
+<td class="gt_row gt_right" headers="tau_990">1.854</td>
+<td class="gt_row gt_right" headers="tau_999">3.559</td>
+<td class="gt_row gt_right" headers="emp_990">1.844</td>
+<td class="gt_row gt_right" headers="emp_999">4.004</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="fit">Training losses (comparison only)</td>
+<td class="gt_row gt_right" headers="u">1.254</td>
+<td class="gt_row gt_right" headers="Nu">807</td>
+<td class="gt_row gt_right" headers="N">16,128</td>
+<td class="gt_row gt_right" headers="sigma">0.247 (0.012)</td>
+<td class="gt_row gt_right" headers="xi">0.172 (0.036)</td>
+<td class="gt_row gt_right" headers="tau_990">1.713</td>
+<td class="gt_row gt_right" headers="tau_999">2.635</td>
+<td class="gt_row gt_right" headers="emp_990">1.684</td>
+<td class="gt_row gt_right" headers="emp_999">2.712</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</figure>
+</div>
+</div>
+<p><strong>How to read the table.</strong> Each row is one fit of the tail model. <span class="math inline">\(u\)</span> is the loss level above which the tail is modelled, and <span class="math inline">\(N_u\)</span> counts how many windows exceed it. <span class="math inline">\(\sigma\)</span> sets the spread of the tail and <span class="math inline">\(\xi\)</span> its shape: positive means occasional very large values, zero means an exponential tail, negative means a hard ceiling. Standard errors are in brackets. The τ columns are the resulting alert thresholds, shown beside the plain sample quantiles.</p>
+<p><strong>What the table tells you.</strong> The held-out tail is heavy, with <span class="math inline">\(\xi = 0.381\)</span> and a resampling range of 0.27 to 0.49. Fitting on training losses would have set a lower 99.9% threshold (2.635 against 3.559) and raised more false alarms on new hosts. The fitted threshold sits below the plain sample quantile (4.004), because the tail contains a step of count-driven spikes that a smooth curve cannot follow.</p>
+</section>
+<section id="what-drives-the-normal-tail" class="level2">
+<h2 class="anchored" data-anchor-id="what-drives-the-normal-tail">What drives the normal tail</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Display code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>tc <span class="sc">|&gt;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gt</span>() <span class="sc">|&gt;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_header</span>(<span class="at">title =</span> <span class="st">"Which Feature Dominates the Largest Normal Losses"</span>,</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>             <span class="at">subtitle =</span> <span class="fu">sprintf</span>(<span class="st">"Held-out normal windows above τ 0.99 (n = %s)"</span>, <span class="fu">f_int</span>(<span class="fu">sum</span>(tc<span class="sc">$</span>n)))) <span class="sc">|&gt;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cols_label</span>(<span class="at">feature =</span> <span class="st">"Feature with the largest residual"</span>, <span class="at">n =</span> <span class="st">"Windows"</span>, <span class="at">share =</span> <span class="st">"Share"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fmt_percent</span>(share, <span class="at">decimals =</span> <span class="dv">1</span>) <span class="sc">|&gt;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_options</span>(<span class="at">table.font.size =</span> <span class="dv">12</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div id="tbl-tail-composition" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl quarto-uncaptioned" id="tbl-tail-composition-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;2
+</figcaption>
+<div aria-describedby="tbl-tail-composition-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<div id="fjppzghnsx" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#fjppzghnsx table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#fjppzghnsx thead, #fjppzghnsx tbody, #fjppzghnsx tfoot, #fjppzghnsx tr, #fjppzghnsx td, #fjppzghnsx th {
+  border-style: none;
+}
+
+#fjppzghnsx p {
+  margin: 0;
+  padding: 0;
+}
+
+#fjppzghnsx .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 12px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#fjppzghnsx .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#fjppzghnsx .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#fjppzghnsx .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#fjppzghnsx .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#fjppzghnsx .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#fjppzghnsx .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#fjppzghnsx .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#fjppzghnsx .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#fjppzghnsx .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#fjppzghnsx .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#fjppzghnsx .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#fjppzghnsx .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#fjppzghnsx .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#fjppzghnsx .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#fjppzghnsx .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#fjppzghnsx .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#fjppzghnsx .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#fjppzghnsx .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#fjppzghnsx .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#fjppzghnsx .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#fjppzghnsx .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#fjppzghnsx .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#fjppzghnsx .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#fjppzghnsx .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#fjppzghnsx .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#fjppzghnsx .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#fjppzghnsx .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#fjppzghnsx .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#fjppzghnsx .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#fjppzghnsx .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#fjppzghnsx .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#fjppzghnsx .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#fjppzghnsx .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#fjppzghnsx .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#fjppzghnsx .gt_left {
+  text-align: left;
+}
+
+#fjppzghnsx .gt_center {
+  text-align: center;
+}
+
+#fjppzghnsx .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#fjppzghnsx .gt_font_normal {
+  font-weight: normal;
+}
+
+#fjppzghnsx .gt_font_bold {
+  font-weight: bold;
+}
+
+#fjppzghnsx .gt_font_italic {
+  font-style: italic;
+}
+
+#fjppzghnsx .gt_super {
+  font-size: 65%;
+}
+
+#fjppzghnsx .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#fjppzghnsx .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#fjppzghnsx .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#fjppzghnsx .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#fjppzghnsx .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#fjppzghnsx .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#fjppzghnsx .gt_indent_5 {
+  text-indent: 25px;
+}
+
+#fjppzghnsx .katex-display {
+  display: inline-flex !important;
+  margin-bottom: 0.75em !important;
+}
+
+#fjppzghnsx div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+  height: 0px !important;
+}
+</style>
+
+<table class="gt_table do-not-create-environment caption-top table table-sm table-striped small" data-quarto-bootstrap="false">
+<thead>
+<tr class="gt_heading header">
+<td colspan="3" class="gt_heading gt_title gt_font_normal">Which Feature Dominates the Largest Normal Losses</td>
+</tr>
+<tr class="gt_heading even">
+<td colspan="3" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border">Held-out normal windows above τ 0.99 (n = 154)</td>
+</tr>
+<tr class="gt_col_headings header">
+<th id="feature" class="gt_col_heading gt_columns_bottom_border gt_left" data-quarto-table-cell-role="th" scope="col">Feature with the largest residual</th>
+<th id="n" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Windows</th>
+<th id="share" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Share</th>
+</tr>
+</thead>
+<tbody class="gt_table_body">
+<tr class="odd">
+<td class="gt_row gt_left" headers="feature">host_new_service_creations</td>
+<td class="gt_row gt_right" headers="n">84</td>
+<td class="gt_row gt_right" headers="share">54.5%</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="feature">auth_priv_escalations</td>
+<td class="gt_row gt_right" headers="n">64</td>
+<td class="gt_row gt_right" headers="share">41.6%</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left" headers="feature">auth_off_hours_flag</td>
+<td class="gt_row gt_right" headers="n">6</td>
+<td class="gt_row gt_right" headers="share">3.9%</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</figure>
+</div>
+</div>
+<p><strong>How to read the table.</strong> We took the normal held-out windows with the highest losses, those above the 99% threshold, 154 windows in all. For each one we recorded which single feature the model reconstructed worst, and the table counts how often each feature was that main culprit. Features not listed were never the largest contributor. The share column converts the counts into percentages of these extreme normal windows.</p>
+<p><strong>What the table tells you.</strong> Two rare counts, new service creations and privilege escalations, cause 96.1% of the most extreme normal losses. They are zero almost all the time, so a single occurrence looks wildly abnormal after standardization. That sets a high bar that a genuine volume-based attack must clear, and it breaks the smooth-tail assumption behind the threshold model. Modelling count features separately, or capping their contribution, is the obvious next step.</p>
+</section>
+<section id="threshold-diagnostics" class="level2">
+<h2 class="anchored" data-anchor-id="threshold-diagnostics">Threshold diagnostics</h2>
+<p>The choice of <span class="math inline">\(u\)</span> and the GPD fit are assumptions. These plots test whether the assumptions are reasonable.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Display code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">3</span>), <span class="at">mar =</span> <span class="fu">c</span>(<span class="fl">4.5</span>, <span class="fl">4.5</span>, <span class="dv">3</span>, <span class="dv">1</span>))</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>evd<span class="sc">::</span><span class="fu">mrlplot</span>(main<span class="sc">$</span>loss_val, <span class="at">tlim =</span> <span class="fu">quantile</span>(main<span class="sc">$</span>loss_val, <span class="fu">c</span>(<span class="fl">0.80</span>, <span class="fl">0.995</span>)),</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>             <span class="at">main =</span> <span class="st">"Mean residual life"</span>, <span class="at">xlab =</span> <span class="st">"Threshold u"</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">v =</span> pot<span class="sc">$</span>u, <span class="at">lty =</span> <span class="dv">2</span>, <span class="at">col =</span> <span class="st">"#e34948"</span>)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>evd<span class="sc">::</span><span class="fu">tcplot</span>(main<span class="sc">$</span>loss_val, <span class="at">tlim =</span> <span class="fu">quantile</span>(main<span class="sc">$</span>loss_val, <span class="fu">c</span>(<span class="fl">0.85</span>, <span class="fl">0.99</span>)), <span class="at">nt =</span> <span class="dv">15</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>            <span class="at">which =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>, <span class="at">std.err =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-threshold-choice" class="quarto-float quarto-figure quarto-figure-center anchored" width="960">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-threshold-choice-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="thresholds_files/figure-html/fig-threshold-choice-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="Figure&nbsp;1: "><img src="thresholds_files/figure-html/fig-threshold-choice-1.png" id="fig-threshold-choice" class="img-fluid figure-img" width="960"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-threshold-choice-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>How to read the plots.</strong> <em>Left:</em> the average amount by which losses exceed each candidate cut-off. Above a suitable cut-off this line should be roughly straight. <em>Middle and right:</em> the tail model’s adjusted scale and its shape <span class="math inline">\(\xi\)</span>, refitted at fifteen cut-offs between the 85% and 99% quantiles, with 95% intervals as vertical bars. A suitable cut-off is one above which these estimates stay flat. The dashed red line marks the cut-off actually chosen.</p>
+<p><strong>What the plots tell you.</strong> There is no stable region. The shape estimate keeps rising with the cut-off, from 0.19 at the 90% quantile to 0.68 at the 99% quantile, and the mean-excess line curves upward instead of straightening. One smooth tail model does not describe these losses well, because they mix ordinary errors with discrete count spikes. The chosen cut-off is a compromise, and the 99.9% threshold moves between 3.29 and 3.71 depending on it.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Display code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>), <span class="at">mar =</span> <span class="fu">c</span>(<span class="fl">4.5</span>, <span class="fl">4.5</span>, <span class="dv">3</span>, <span class="dv">1</span>))</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(pot<span class="sc">$</span>fit, <span class="at">which =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">4</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-gpd-fit" class="quarto-float quarto-figure quarto-figure-center anchored" width="960">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-gpd-fit-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="thresholds_files/figure-html/fig-gpd-fit-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2" title="Figure&nbsp;2: "><img src="thresholds_files/figure-html/fig-gpd-fit-1.png" id="fig-gpd-fit" class="img-fluid figure-img" width="960"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-gpd-fit-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>How to read the plots.</strong> <em>Left:</em> each point compares an observed tail loss with the value the fitted model predicts for it, and points on the diagonal mean a good fit. <em>Right:</em> the loss level the model implies for increasingly rare events, moving right on a logarithmic scale, with observed losses as crosses and dotted 95% bands. Bands that widen quickly mean the model is uncertain about how large the rarest losses can get.</p>
+<p><strong>What the plots tell you.</strong> The points follow the line through the body of the tail, then jump in a visible step: the cluster of count-spike windows that the smooth model cannot represent. Above that step the observed losses fall below the fitted curve, so the model may overstate the most extreme thresholds. The bands fan out quickly to the right, so thresholds for very rare events are far less certain than the 99.9% threshold used for alerts.</p>
+</section>
+<section id="thresholds-and-their-uncertainty" class="level2">
+<h2 class="anchored" data-anchor-id="thresholds-and-their-uncertainty">Thresholds and their uncertainty</h2>
+<p>EVT earns its place when the alert rate must be far lower than 0.1%, below the range where the data contain enough examples. At a security operations centre (SOC) scoring 1,000,000 windows a day, even 0.1% means 1,000 alerts a day.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Display code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tibble</span>(<span class="at">q =</span> q, <span class="at">tau =</span> main<span class="sc">$</span>taus, <span class="at">emp =</span> emp) <span class="sc">|&gt;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(boot_ci, <span class="at">by =</span> <span class="fu">join_by</span>(q)) <span class="sc">|&gt;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">alerts_per_day =</span> (<span class="dv">1</span> <span class="sc">-</span> q) <span class="sc">*</span> vol, <span class="at">q_lab =</span> <span class="fu">paste0</span>(<span class="fu">formatC</span>(<span class="dv">100</span> <span class="sc">*</span> q, <span class="at">format =</span> <span class="st">"f"</span>, <span class="at">digits =</span> <span class="dv">3</span>), <span class="st">"%"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(q_lab, tau, lo, hi, emp, alerts_per_day) <span class="sc">|&gt;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gt</span>() <span class="sc">|&gt;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_header</span>(<span class="at">title =</span> <span class="st">"Alert Thresholds at Increasing Rarity"</span>,</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>             <span class="at">subtitle =</span> <span class="fu">sprintf</span>(<span class="st">"Held-out fit; 95%% block-bootstrap interval from %s resamples of host-days"</span>, <span class="fu">f_int</span>(cfg<span class="sc">$</span>evt<span class="sc">$</span>bootstrap_B))) <span class="sc">|&gt;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cols_label</span>(<span class="at">q_lab =</span> <span class="st">"Quantile q"</span>, <span class="at">tau =</span> <span class="st">"EVT τ"</span>, <span class="at">lo =</span> <span class="st">"95% CI low"</span>, <span class="at">hi =</span> <span class="st">"95% CI high"</span>,</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>             <span class="at">emp =</span> <span class="st">"Empirical quantile"</span>, <span class="at">alerts_per_day =</span> <span class="fu">sprintf</span>(<span class="st">"Normal alerts / day at %s windows"</span>, <span class="fu">f_int</span>(vol))) <span class="sc">|&gt;</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fmt_number</span>(<span class="fu">c</span>(tau, lo, hi, emp), <span class="at">decimals =</span> <span class="dv">3</span>) <span class="sc">|&gt;</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fmt_number</span>(alerts_per_day, <span class="at">decimals =</span> <span class="dv">0</span>) <span class="sc">|&gt;</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sub_missing</span>(<span class="at">missing_text =</span> <span class="st">"too few data"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_options</span>(<span class="at">table.font.size =</span> <span class="dv">12</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div id="tbl-deep-quantiles" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl quarto-uncaptioned" id="tbl-deep-quantiles-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;3
+</figcaption>
+<div aria-describedby="tbl-deep-quantiles-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<div id="iybsrqecuc" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#iybsrqecuc table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#iybsrqecuc thead, #iybsrqecuc tbody, #iybsrqecuc tfoot, #iybsrqecuc tr, #iybsrqecuc td, #iybsrqecuc th {
+  border-style: none;
+}
+
+#iybsrqecuc p {
+  margin: 0;
+  padding: 0;
+}
+
+#iybsrqecuc .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 12px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#iybsrqecuc .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#iybsrqecuc .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#iybsrqecuc .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#iybsrqecuc .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#iybsrqecuc .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#iybsrqecuc .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#iybsrqecuc .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#iybsrqecuc .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#iybsrqecuc .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#iybsrqecuc .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#iybsrqecuc .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#iybsrqecuc .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#iybsrqecuc .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#iybsrqecuc .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#iybsrqecuc .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#iybsrqecuc .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#iybsrqecuc .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#iybsrqecuc .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#iybsrqecuc .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#iybsrqecuc .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#iybsrqecuc .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#iybsrqecuc .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#iybsrqecuc .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#iybsrqecuc .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#iybsrqecuc .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#iybsrqecuc .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#iybsrqecuc .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#iybsrqecuc .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#iybsrqecuc .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#iybsrqecuc .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#iybsrqecuc .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#iybsrqecuc .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#iybsrqecuc .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#iybsrqecuc .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#iybsrqecuc .gt_left {
+  text-align: left;
+}
+
+#iybsrqecuc .gt_center {
+  text-align: center;
+}
+
+#iybsrqecuc .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#iybsrqecuc .gt_font_normal {
+  font-weight: normal;
+}
+
+#iybsrqecuc .gt_font_bold {
+  font-weight: bold;
+}
+
+#iybsrqecuc .gt_font_italic {
+  font-style: italic;
+}
+
+#iybsrqecuc .gt_super {
+  font-size: 65%;
+}
+
+#iybsrqecuc .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#iybsrqecuc .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#iybsrqecuc .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#iybsrqecuc .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#iybsrqecuc .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#iybsrqecuc .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#iybsrqecuc .gt_indent_5 {
+  text-indent: 25px;
+}
+
+#iybsrqecuc .katex-display {
+  display: inline-flex !important;
+  margin-bottom: 0.75em !important;
+}
+
+#iybsrqecuc div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+  height: 0px !important;
+}
+</style>
+
+<table class="gt_table do-not-create-environment caption-top table table-sm table-striped small" data-quarto-bootstrap="false">
+<thead>
+<tr class="gt_heading header">
+<td colspan="6" class="gt_heading gt_title gt_font_normal">Alert Thresholds at Increasing Rarity</td>
+</tr>
+<tr class="gt_heading even">
+<td colspan="6" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border">Held-out fit; 95% block-bootstrap interval from 1,000 resamples of host-days</td>
+</tr>
+<tr class="gt_col_headings header">
+<th id="q_lab" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Quantile q</th>
+<th id="tau" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">EVT τ</th>
+<th id="lo" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">95% CI low</th>
+<th id="hi" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">95% CI high</th>
+<th id="emp" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Empirical quantile</th>
+<th id="alerts_per_day" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Normal alerts / day at 1,000,000 windows</th>
+</tr>
+</thead>
+<tbody class="gt_table_body">
+<tr class="odd">
+<td class="gt_row gt_right" headers="q_lab">99.000%</td>
+<td class="gt_row gt_right" headers="tau">1.854</td>
+<td class="gt_row gt_right" headers="lo">1.766</td>
+<td class="gt_row gt_right" headers="hi">1.941</td>
+<td class="gt_row gt_right" headers="emp">1.844</td>
+<td class="gt_row gt_right" headers="alerts_per_day">10,000</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_right" headers="q_lab">99.900%</td>
+<td class="gt_row gt_right" headers="tau">3.559</td>
+<td class="gt_row gt_right" headers="lo">3.059</td>
+<td class="gt_row gt_right" headers="hi">4.201</td>
+<td class="gt_row gt_right" headers="emp">4.004</td>
+<td class="gt_row gt_right" headers="alerts_per_day">1,000</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_right" headers="q_lab">99.990%</td>
+<td class="gt_row gt_right" headers="tau">7.656</td>
+<td class="gt_row gt_right" headers="lo">5.449</td>
+<td class="gt_row gt_right" headers="hi">11.348</td>
+<td class="gt_row gt_right" headers="emp">too few data</td>
+<td class="gt_row gt_right" headers="alerts_per_day">100</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_right" headers="q_lab">99.999%</td>
+<td class="gt_row gt_right" headers="tau">17.498</td>
+<td class="gt_row gt_right" headers="lo">9.982</td>
+<td class="gt_row gt_right" headers="hi">33.587</td>
+<td class="gt_row gt_right" headers="emp">too few data</td>
+<td class="gt_row gt_right" headers="alerts_per_day">10</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</figure>
+</div>
+</div>
+<p><strong>How to read the table.</strong> Each row is a rarer alert level. “EVT τ” is the threshold from the fitted tail. The interval columns show its range when the analysis is repeated on resampled data, keeping whole host-days together so neighbouring windows stay linked. “Empirical quantile” is the plain data answer, shown only where at least 10 held-out windows exceed it. The last column is benign alerts per day at 1,000,000 windows a day.</p>
+<p><strong>What the table tells you.</strong> The 99.9% threshold is 3.559 with an interval of 3.059–4.201: a range, not a precise value. Beyond 99.99% the data hold too few examples for a plain answer, so the fitted tail is the only basis for a threshold, and its intervals widen sharply (10.0–33.6 at 99.999%). Those rarer levels are what a large security operations centre would need to keep alert volumes manageable.</p>
+</section>
+<section id="calibration-on-new-hosts" class="level2">
+<h2 class="anchored" data-anchor-id="calibration-on-new-hosts">Calibration on new hosts</h2>
+<p>A threshold meant to produce 0.1% false alarms should produce about 0.1% on hosts it was not fitted on. This table checks that.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Display code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>cal <span class="sc">|&gt;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">q_lab =</span> <span class="fu">paste0</span>(<span class="fu">formatC</span>(<span class="dv">100</span> <span class="sc">*</span> q, <span class="at">format =</span> <span class="st">"f"</span>, <span class="at">digits =</span> <span class="dv">3</span>), <span class="st">"%"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(q_lab, tau, n_normal, expected_fp, observed_fp, p_value) <span class="sc">|&gt;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gt</span>() <span class="sc">|&gt;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_header</span>(<span class="at">title =</span> <span class="st">"Observed vs Expected False Alarms"</span>, <span class="at">subtitle =</span> <span class="st">"Clean test hosts, main seed; exact binomial test"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cols_label</span>(<span class="at">q_lab =</span> <span class="st">"Quantile q"</span>, <span class="at">tau =</span> <span class="st">"τ"</span>, <span class="at">n_normal =</span> <span class="st">"Normal windows"</span>, <span class="at">expected_fp =</span> <span class="st">"Expected"</span>,</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>             <span class="at">observed_fp =</span> <span class="st">"Observed"</span>, <span class="at">p_value =</span> <span class="st">"Binomial p-value"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fmt_number</span>(tau, <span class="at">decimals =</span> <span class="dv">3</span>) <span class="sc">|&gt;</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fmt_number</span>(expected_fp, <span class="at">decimals =</span> <span class="dv">1</span>) <span class="sc">|&gt;</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fmt_integer</span>(n_normal) <span class="sc">|&gt;</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fmt_number</span>(p_value, <span class="at">decimals =</span> <span class="dv">3</span>) <span class="sc">|&gt;</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_options</span>(<span class="at">table.font.size =</span> <span class="dv">12</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div id="tbl-calibration" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl quarto-uncaptioned" id="tbl-calibration-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;4
+</figcaption>
+<div aria-describedby="tbl-calibration-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<div id="nxmbwteaee" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#nxmbwteaee table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#nxmbwteaee thead, #nxmbwteaee tbody, #nxmbwteaee tfoot, #nxmbwteaee tr, #nxmbwteaee td, #nxmbwteaee th {
+  border-style: none;
+}
+
+#nxmbwteaee p {
+  margin: 0;
+  padding: 0;
+}
+
+#nxmbwteaee .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 12px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#nxmbwteaee .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#nxmbwteaee .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#nxmbwteaee .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#nxmbwteaee .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#nxmbwteaee .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#nxmbwteaee .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#nxmbwteaee .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#nxmbwteaee .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#nxmbwteaee .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#nxmbwteaee .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#nxmbwteaee .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#nxmbwteaee .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#nxmbwteaee .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#nxmbwteaee .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#nxmbwteaee .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#nxmbwteaee .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#nxmbwteaee .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#nxmbwteaee .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#nxmbwteaee .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#nxmbwteaee .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#nxmbwteaee .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#nxmbwteaee .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#nxmbwteaee .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#nxmbwteaee .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#nxmbwteaee .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#nxmbwteaee .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#nxmbwteaee .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#nxmbwteaee .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#nxmbwteaee .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#nxmbwteaee .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#nxmbwteaee .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#nxmbwteaee .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#nxmbwteaee .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#nxmbwteaee .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#nxmbwteaee .gt_left {
+  text-align: left;
+}
+
+#nxmbwteaee .gt_center {
+  text-align: center;
+}
+
+#nxmbwteaee .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#nxmbwteaee .gt_font_normal {
+  font-weight: normal;
+}
+
+#nxmbwteaee .gt_font_bold {
+  font-weight: bold;
+}
+
+#nxmbwteaee .gt_font_italic {
+  font-style: italic;
+}
+
+#nxmbwteaee .gt_super {
+  font-size: 65%;
+}
+
+#nxmbwteaee .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#nxmbwteaee .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#nxmbwteaee .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#nxmbwteaee .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#nxmbwteaee .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#nxmbwteaee .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#nxmbwteaee .gt_indent_5 {
+  text-indent: 25px;
+}
+
+#nxmbwteaee .katex-display {
+  display: inline-flex !important;
+  margin-bottom: 0.75em !important;
+}
+
+#nxmbwteaee div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+  height: 0px !important;
+}
+</style>
+
+<table class="gt_table do-not-create-environment caption-top table table-sm table-striped small" data-quarto-bootstrap="false">
+<thead>
+<tr class="gt_heading header">
+<td colspan="6" class="gt_heading gt_title gt_font_normal">Observed vs Expected False Alarms</td>
+</tr>
+<tr class="gt_heading even">
+<td colspan="6" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border">Clean test hosts, main seed; exact binomial test</td>
+</tr>
+<tr class="gt_col_headings header">
+<th id="q_lab" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Quantile q</th>
+<th id="tau" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">τ</th>
+<th id="n_normal" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Normal windows</th>
+<th id="expected_fp" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Expected</th>
+<th id="observed_fp" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Observed</th>
+<th id="p_value" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Binomial p-value</th>
+</tr>
+</thead>
+<tbody class="gt_table_body">
+<tr class="odd">
+<td class="gt_row gt_right" headers="q_lab">99.000%</td>
+<td class="gt_row gt_right" headers="tau">1.854</td>
+<td class="gt_row gt_right" headers="n_normal">8,064</td>
+<td class="gt_row gt_right" headers="expected_fp">80.6</td>
+<td class="gt_row gt_right" headers="observed_fp">61</td>
+<td class="gt_row gt_right" headers="p_value">0.029</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_right" headers="q_lab">99.900%</td>
+<td class="gt_row gt_right" headers="tau">3.559</td>
+<td class="gt_row gt_right" headers="n_normal">8,064</td>
+<td class="gt_row gt_right" headers="expected_fp">8.1</td>
+<td class="gt_row gt_right" headers="observed_fp">16</td>
+<td class="gt_row gt_right" headers="p_value">0.012</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_right" headers="q_lab">99.990%</td>
+<td class="gt_row gt_right" headers="tau">7.656</td>
+<td class="gt_row gt_right" headers="n_normal">8,064</td>
+<td class="gt_row gt_right" headers="expected_fp">0.8</td>
+<td class="gt_row gt_right" headers="observed_fp">0</td>
+<td class="gt_row gt_right" headers="p_value">1.000</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_right" headers="q_lab">99.999%</td>
+<td class="gt_row gt_right" headers="tau">17.498</td>
+<td class="gt_row gt_right" headers="n_normal">8,064</td>
+<td class="gt_row gt_right" headers="expected_fp">0.1</td>
+<td class="gt_row gt_right" headers="observed_fp">0</td>
+<td class="gt_row gt_right" headers="p_value">1.000</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</figure>
+</div>
+</div>
+<p><strong>How to read the table.</strong> For each alert level, “Expected” is how many of the 8,064 normal test windows should cross the threshold if it were exactly right, and “Observed” is how many did. These windows come from hosts that were not used to set the threshold. The p-value says how surprising the gap would be by chance alone. Values below about 0.05 suggest the threshold is genuinely off rather than unlucky.</p>
+<p><strong>What the table tells you.</strong> At 99.9% the test hosts produced 16 false alarms against 8.1 expected (p = 0.012). At 99% they produced 61 against 80.6. The threshold is off in both directions, because each host has its own baseline. Across 30 seeds, false alarms at 99.9% ranged from 1 to 52. Thresholds set per host or per role would be the natural fix.</p>
+</section>
+<section id="clustering-of-alerts" class="level2">
+<h2 class="anchored" data-anchor-id="clustering-of-alerts">Clustering of alerts</h2>
+<p>Exceedances are not independent: one busy period produces several high-loss windows in a row. The extremal index <span class="math inline">\(\theta\)</span> measures this. <span class="math inline">\(1/\theta\)</span> is the average number of exceedances per cluster. We estimate it with the runs method: exceedances within 3 windows of each other belong to one cluster.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Display code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>theta <span class="ot">&lt;-</span> dc<span class="sc">$</span>theta</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">tibble</span>(<span class="at">q =</span> q[<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>]) <span class="sc">|&gt;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">q_lab =</span> <span class="fu">paste0</span>(<span class="fu">formatC</span>(<span class="dv">100</span> <span class="sc">*</span> q, <span class="at">format =</span> <span class="st">"f"</span>, <span class="at">digits =</span> <span class="dv">2</span>), <span class="st">"%"</span>),</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">windows =</span> (<span class="dv">1</span> <span class="sc">-</span> q) <span class="sc">*</span> vol,</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">incidents =</span> theta <span class="sc">*</span> windows</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(q_lab, windows, incidents) <span class="sc">|&gt;</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gt</span>() <span class="sc">|&gt;</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_header</span>(<span class="at">title =</span> <span class="st">"From Window Exceedances to Distinct Alert Clusters"</span>,</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>             <span class="at">subtitle =</span> <span class="fu">sprintf</span>(<span class="st">"Extremal index θ = %.2f; volume %s windows per day"</span>, theta, <span class="fu">f_int</span>(vol))) <span class="sc">|&gt;</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cols_label</span>(<span class="at">q_lab =</span> <span class="st">"Quantile q"</span>, <span class="at">windows =</span> <span class="st">"Normal windows alerting / day"</span>, <span class="at">incidents =</span> <span class="st">"Distinct clusters / day"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fmt_number</span>(<span class="fu">c</span>(windows, incidents), <span class="at">decimals =</span> <span class="dv">0</span>) <span class="sc">|&gt;</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_options</span>(<span class="at">table.font.size =</span> <span class="dv">12</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div id="tbl-decluster" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl quarto-uncaptioned" id="tbl-decluster-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;5
+</figcaption>
+<div aria-describedby="tbl-decluster-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<div id="nkmsuvssit" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#nkmsuvssit table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#nkmsuvssit thead, #nkmsuvssit tbody, #nkmsuvssit tfoot, #nkmsuvssit tr, #nkmsuvssit td, #nkmsuvssit th {
+  border-style: none;
+}
+
+#nkmsuvssit p {
+  margin: 0;
+  padding: 0;
+}
+
+#nkmsuvssit .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 12px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#nkmsuvssit .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#nkmsuvssit .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#nkmsuvssit .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#nkmsuvssit .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#nkmsuvssit .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#nkmsuvssit .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#nkmsuvssit .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#nkmsuvssit .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#nkmsuvssit .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#nkmsuvssit .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#nkmsuvssit .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#nkmsuvssit .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#nkmsuvssit .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#nkmsuvssit .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#nkmsuvssit .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#nkmsuvssit .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#nkmsuvssit .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#nkmsuvssit .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#nkmsuvssit .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#nkmsuvssit .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#nkmsuvssit .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#nkmsuvssit .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#nkmsuvssit .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#nkmsuvssit .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#nkmsuvssit .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#nkmsuvssit .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#nkmsuvssit .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#nkmsuvssit .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#nkmsuvssit .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#nkmsuvssit .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#nkmsuvssit .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#nkmsuvssit .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#nkmsuvssit .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#nkmsuvssit .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#nkmsuvssit .gt_left {
+  text-align: left;
+}
+
+#nkmsuvssit .gt_center {
+  text-align: center;
+}
+
+#nkmsuvssit .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#nkmsuvssit .gt_font_normal {
+  font-weight: normal;
+}
+
+#nkmsuvssit .gt_font_bold {
+  font-weight: bold;
+}
+
+#nkmsuvssit .gt_font_italic {
+  font-style: italic;
+}
+
+#nkmsuvssit .gt_super {
+  font-size: 65%;
+}
+
+#nkmsuvssit .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#nkmsuvssit .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#nkmsuvssit .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#nkmsuvssit .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#nkmsuvssit .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#nkmsuvssit .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#nkmsuvssit .gt_indent_5 {
+  text-indent: 25px;
+}
+
+#nkmsuvssit .katex-display {
+  display: inline-flex !important;
+  margin-bottom: 0.75em !important;
+}
+
+#nkmsuvssit div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+  height: 0px !important;
+}
+</style>
+
+<table class="gt_table do-not-create-environment caption-top table table-sm table-striped small" data-quarto-bootstrap="false">
+<thead>
+<tr class="gt_heading header">
+<td colspan="3" class="gt_heading gt_title gt_font_normal">From Window Exceedances to Distinct Alert Clusters</td>
+</tr>
+<tr class="gt_heading even">
+<td colspan="3" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border">Extremal index θ = 0.80; volume 1,000,000 windows per day</td>
+</tr>
+<tr class="gt_col_headings header">
+<th id="q_lab" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Quantile q</th>
+<th id="windows" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Normal windows alerting / day</th>
+<th id="incidents" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Distinct clusters / day</th>
+</tr>
+</thead>
+<tbody class="gt_table_body">
+<tr class="odd">
+<td class="gt_row gt_right" headers="q_lab">99.00%</td>
+<td class="gt_row gt_right" headers="windows">10,000</td>
+<td class="gt_row gt_right" headers="incidents">7,993</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_right" headers="q_lab">99.90%</td>
+<td class="gt_row gt_right" headers="windows">1,000</td>
+<td class="gt_row gt_right" headers="incidents">799</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_right" headers="q_lab">99.99%</td>
+<td class="gt_row gt_right" headers="windows">100</td>
+<td class="gt_row gt_right" headers="incidents">80</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</figure>
+</div>
+</div>
+<p><strong>How to read the table.</strong> Alerts tend to arrive in bursts: one busy period produces several high-loss windows in a row. The first column is the number of benign windows per day that would cross each threshold at 1,000,000 windows a day. The second groups windows that fire within 3 windows of each other into a single cluster. That is closer to the number of separate incidents an analyst must actually open and close.</p>
+<p><strong>What the table tells you.</strong> The extremal index of 0.80 means about 1.3 exceedances per cluster on average, so grouping cuts the triage load only modestly: 807 exceedances form 645 clusters. The tail shape barely changes when fitted to cluster peaks (<span class="math inline">\(\xi = 0.358\)</span>). Even at the 99.99% level this detector alone would raise about 80 benign alert clusters a day at this volume, far too many to act on automatically.</p>
+
+
+<!-- -->
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+    const viewSource = window.document.getElementById('quarto-view-source') ||
+                       window.document.getElementById('quarto-code-tools-source');
+    if (viewSource) {
+      const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+      viewSource.addEventListener("click", function(e) {
+        if (sourceUrl) {
+          // rstudio viewer pane
+          if (/\bcapabilities=\b/.test(window.location)) {
+            window.open(sourceUrl);
+          } else {
+            window.location.href = sourceUrl;
+          }
+        } else {
+          const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+          modal.show();
+        }
+        return false;
+      });
+    }
+    function toggleCodeHandler(show) {
+      return function(e) {
+        const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+        for (let i=0; i<detailsSrc.length; i++) {
+          const details = detailsSrc[i].parentElement;
+          if (show) {
+            details.open = true;
+          } else {
+            details.removeAttribute("open");
+          }
+        }
+        const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+        const fromCls = show ? "hidden" : "unhidden";
+        const toCls = show ? "unhidden" : "hidden";
+        for (let i=0; i<cellCodeDivs.length; i++) {
+          const codeDiv = cellCodeDivs[i];
+          if (codeDiv.classList.contains(fromCls)) {
+            codeDiv.classList.remove(fromCls);
+            codeDiv.classList.add(toCls);
+          } 
+        }
+        return false;
+      }
+    }
+    const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+    if (hideAllCode) {
+      hideAllCode.addEventListener("click", toggleCodeHandler(false));
+    }
+    const showAllCode = window.document.getElementById("quarto-show-all-code");
+    if (showAllCode) {
+      showAllCode.addEventListener("click", toggleCodeHandler(true));
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation column-body">
+  <div class="nav-page nav-page-previous">
+      <a href="./detector.html" class="pagination-link" aria-label="Detector">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Detector</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./evaluation.html" class="pagination-link" aria-label="Evaluation">
+        <span class="nav-page-text">Evaluation</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Alert Thresholds: Extreme Value Theory"</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="an">subtitle:</span><span class="co"> "Cyber Anomaly Detection &amp; Dependency Risk: peaks-over-threshold fitting, uncertainty, diagnostics, and calibration"</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="an">author:</span><span class="co"> Patrick Lefler</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="an">date:</span><span class="co"> "2026-08-13"</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="an">date-modified:</span><span class="co"> "2026-11-18"</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: setup</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="co">#| include: false</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"R/pages/setup.R"</span>)</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>pot <span class="ot">&lt;-</span> main<span class="sc">$</span>pot</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>pot_tr <span class="ot">&lt;-</span> main<span class="sc">$</span>pot_train</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>q <span class="ot">&lt;-</span> main<span class="sc">$</span>q</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>boot_ci <span class="ot">&lt;-</span> analysis<span class="sc">$</span>boot <span class="sc">|&gt;</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">lo =</span> <span class="fu">quantile</span>(tau, <span class="fl">0.025</span>), <span class="at">hi =</span> <span class="fu">quantile</span>(tau, <span class="fl">0.975</span>), <span class="at">.by =</span> q)</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>xi_ci <span class="ot">&lt;-</span> <span class="fu">quantile</span>(<span class="fu">filter</span>(analysis<span class="sc">$</span>boot, q <span class="sc">==</span> q[<span class="dv">1</span>])<span class="sc">$</span>xi, <span class="fu">c</span>(<span class="fl">0.025</span>, <span class="fl">0.975</span>))</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>cal <span class="ot">&lt;-</span> analysis<span class="sc">$</span>calibration</span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>dc <span class="ot">&lt;-</span> analysis<span class="sc">$</span>decluster</span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>tc <span class="ot">&lt;-</span> analysis<span class="sc">$</span>tail_composition</span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>vol <span class="ot">&lt;-</span> cfg<span class="sc">$</span>operations<span class="sc">$</span>windows_per_day</span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>emp <span class="ot">&lt;-</span> <span class="fu">empirical_quantile</span>(main<span class="sc">$</span>loss_val, q, cfg<span class="sc">$</span>evt<span class="sc">$</span>min_empirical_exceedances)</span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>u_sens <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">u_prob =</span> <span class="fu">c</span>(<span class="fl">0.90</span>, <span class="fl">0.95</span>, <span class="fl">0.975</span>, <span class="fl">0.99</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">fit =</span> <span class="fu">map</span>(u_prob, \(p) <span class="fu">fit_pot</span>(main<span class="sc">$</span>loss_val, p, <span class="at">std_err =</span> <span class="cn">FALSE</span>)),</span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>         <span class="at">xi =</span> <span class="fu">map_dbl</span>(fit, <span class="st">"xi"</span>), <span class="at">tau_999 =</span> <span class="fu">map_dbl</span>(fit, \(f) <span class="fu">pot_taus</span>(f, <span class="fl">0.999</span>)))</span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a><span class="fu">## What the threshold is, and is not</span></span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>Every window gets a reconstruction loss $\ell(\mathbf{x})$ from the <span class="co">[</span><span class="ot">Detector</span><span class="co">](detector.qmd)</span>. An alert fires when $\ell(\mathbf{x}) &gt; \tau_q$. Here $\tau_q$ is the **$q$-quantile threshold** of the loss for normal windows: a normal window exceeds it with probability $1 - q$. "The 99.9% threshold" therefore means an exceedance probability of 0.1% per normal window. It is not a confidence level. It is also not adaptive: $\tau_q$ is estimated once and then fixed. Refitting it on a rolling window or by time of day is listed as further work.</span>
+<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a>**Peaks over threshold (POT).** Above a high level $u$, the excesses $\ell - u$ are modelled with a Generalized Pareto Distribution (GPD) with scale $\sigma$ and shape $\xi$. With $N$ windows, $N_u$ of which exceed $u$,</span>
+<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a>\tau_q =</span>
+<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a>\begin{cases}</span>
+<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a>u + \dfrac{\sigma}{\xi}\left<span class="co">[</span><span class="ot">\left(\dfrac{N}{N_u}(1-q)\right)^{-\xi} - 1\right</span><span class="co">]</span>, &amp; \xi \neq 0,<span class="sc">\\</span><span class="co">[</span><span class="ot">2ex</span><span class="co">]</span></span>
+<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a>u + \sigma \ln<span class="sc">\!</span>\left(\dfrac{N_u}{N(1-q)}\right), &amp; \xi = 0 .</span>
+<span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a>\end{cases}</span>
+<span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb8-44"><a href="#cb8-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-45"><a href="#cb8-45" aria-hidden="true" tabindex="-1"></a>The second line is the exponential limit. The code (<span class="in">`gpd_tau()`</span> in <span class="in">`R/evt.R`</span>) switches to it when $|\xi| &lt; 10^{-6}$, and a unit test checks that it returns a finite value at $\xi = 0$.</span>
+<span id="cb8-46"><a href="#cb8-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-47"><a href="#cb8-47" aria-hidden="true" tabindex="-1"></a>**Held-out fitting.** The GPD is fitted to losses from the `r cfg$simulation$hosts_val` **validation hosts** (<span class="in">`r f_int(pot$N)`</span> windows), which the autoencoder never trained on. Training losses are biased low, because the model has seen those windows. Their fit is kept only as a comparison row. We set $u$ at the <span class="in">`r f_pct(cfg$evt$u_prob, 0)`</span> quantile.</span>
+<span id="cb8-48"><a href="#cb8-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-49"><a href="#cb8-49" aria-hidden="true" tabindex="-1"></a><span class="fu">## Fitted parameters</span></span>
+<span id="cb8-50"><a href="#cb8-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-51"><a href="#cb8-51" aria-hidden="true" tabindex="-1"></a>Without the fitted parameters a reader can't judge the shape of the tail or check the threshold arithmetic. The original report did not show them.</span>
+<span id="cb8-52"><a href="#cb8-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-55"><a href="#cb8-55" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb8-56"><a href="#cb8-56" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: tbl-gpd-fit</span></span>
+<span id="cb8-57"><a href="#cb8-57" aria-hidden="true" tabindex="-1"></a>pm <span class="ot">&lt;-</span> \(est, se) <span class="fu">sprintf</span>(<span class="st">"%.3f (%.3f)"</span>, est, se)</span>
+<span id="cb8-58"><a href="#cb8-58" aria-hidden="true" tabindex="-1"></a>fit_row <span class="ot">&lt;-</span> \(p, label, losses) <span class="fu">tibble</span>(</span>
+<span id="cb8-59"><a href="#cb8-59" aria-hidden="true" tabindex="-1"></a>  <span class="at">fit =</span> label, <span class="at">u =</span> p<span class="sc">$</span>u, <span class="at">Nu =</span> p<span class="sc">$</span>Nu, <span class="at">N =</span> p<span class="sc">$</span>N,</span>
+<span id="cb8-60"><a href="#cb8-60" aria-hidden="true" tabindex="-1"></a>  <span class="at">sigma =</span> <span class="fu">pm</span>(p<span class="sc">$</span>sigma, p<span class="sc">$</span>se[[<span class="st">"scale"</span>]]), <span class="at">xi =</span> <span class="fu">pm</span>(p<span class="sc">$</span>xi, p<span class="sc">$</span>se[[<span class="st">"shape"</span>]]),</span>
+<span id="cb8-61"><a href="#cb8-61" aria-hidden="true" tabindex="-1"></a>  <span class="at">tau_990 =</span> <span class="fu">pot_taus</span>(p, <span class="fl">0.99</span>), <span class="at">tau_999 =</span> <span class="fu">pot_taus</span>(p, <span class="fl">0.999</span>),</span>
+<span id="cb8-62"><a href="#cb8-62" aria-hidden="true" tabindex="-1"></a>  <span class="at">emp_990 =</span> <span class="fu">quantile</span>(losses, <span class="fl">0.99</span>), <span class="at">emp_999 =</span> <span class="fu">quantile</span>(losses, <span class="fl">0.999</span>)</span>
+<span id="cb8-63"><a href="#cb8-63" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-64"><a href="#cb8-64" aria-hidden="true" tabindex="-1"></a><span class="fu">bind_rows</span>(</span>
+<span id="cb8-65"><a href="#cb8-65" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit_row</span>(pot, <span class="st">"Held-out validation losses (used for alerts)"</span>, main<span class="sc">$</span>loss_val),</span>
+<span id="cb8-66"><a href="#cb8-66" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit_row</span>(pot_tr, <span class="st">"Training losses (comparison only)"</span>, main<span class="sc">$</span>loss_train)</span>
+<span id="cb8-67"><a href="#cb8-67" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb8-68"><a href="#cb8-68" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gt</span>() <span class="sc">|&gt;</span></span>
+<span id="cb8-69"><a href="#cb8-69" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_header</span>(<span class="at">title =</span> <span class="st">"Generalized Pareto Fit to the Loss Tail"</span>, <span class="at">subtitle =</span> <span class="st">"Standard errors in brackets"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb8-70"><a href="#cb8-70" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cols_label</span>(<span class="at">fit =</span> <span class="st">"Fitted on"</span>, <span class="at">u =</span> <span class="st">"u"</span>, <span class="at">Nu =</span> <span class="st">"N_u"</span>, <span class="at">N =</span> <span class="st">"N"</span>, <span class="at">sigma =</span> <span class="st">"σ (SE)"</span>, <span class="at">xi =</span> <span class="st">"ξ (SE)"</span>,</span>
+<span id="cb8-71"><a href="#cb8-71" aria-hidden="true" tabindex="-1"></a>             <span class="at">tau_990 =</span> <span class="st">"τ 0.99"</span>, <span class="at">tau_999 =</span> <span class="st">"τ 0.999"</span>, <span class="at">emp_990 =</span> <span class="st">"Empirical 99%"</span>, <span class="at">emp_999 =</span> <span class="st">"Empirical 99.9%"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb8-72"><a href="#cb8-72" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_spanner</span>(<span class="st">"EVT thresholds"</span>, <span class="fu">c</span>(tau_990, tau_999)) <span class="sc">|&gt;</span></span>
+<span id="cb8-73"><a href="#cb8-73" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_spanner</span>(<span class="st">"Empirical quantiles"</span>, <span class="fu">c</span>(emp_990, emp_999)) <span class="sc">|&gt;</span></span>
+<span id="cb8-74"><a href="#cb8-74" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fmt_number</span>(<span class="fu">c</span>(u, tau_990, tau_999, emp_990, emp_999), <span class="at">decimals =</span> <span class="dv">3</span>) <span class="sc">|&gt;</span></span>
+<span id="cb8-75"><a href="#cb8-75" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fmt_integer</span>(<span class="fu">c</span>(Nu, N)) <span class="sc">|&gt;</span></span>
+<span id="cb8-76"><a href="#cb8-76" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_options</span>(<span class="at">table.font.size =</span> <span class="dv">12</span>)</span>
+<span id="cb8-77"><a href="#cb8-77" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb8-78"><a href="#cb8-78" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-79"><a href="#cb8-79" aria-hidden="true" tabindex="-1"></a>**How to read the table.** Each row is one fit of the tail model. $u$ is the loss level above which the tail is modelled, and $N_u$ counts how many windows exceed it. $\sigma$ sets the spread of the tail and $\xi$ its shape: positive means occasional very large values, zero means an exponential tail, negative means a hard ceiling. Standard errors are in brackets. The τ columns are the resulting alert thresholds, shown beside the plain sample quantiles.</span>
+<span id="cb8-80"><a href="#cb8-80" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-81"><a href="#cb8-81" aria-hidden="true" tabindex="-1"></a>**What the table tells you.** The held-out tail is heavy, with $\xi = <span class="in">`r f_num(pot$xi, 3)`</span>$ and a resampling range of <span class="in">`r f_num(xi_ci[1])`</span> to <span class="in">`r f_num(xi_ci[2])`</span>. Fitting on training losses would have set a lower 99.9% threshold (<span class="in">`r f_num(pot_taus(pot_tr, 0.999), 3)`</span> against <span class="in">`r f_num(tau[["q0.999"]], 3)`</span>) and raised more false alarms on new hosts. The fitted threshold sits below the plain sample quantile (<span class="in">`r f_num(quantile(main$loss_val, 0.999), 3)`</span>), because the tail contains a step of count-driven spikes that a smooth curve cannot follow.</span>
+<span id="cb8-82"><a href="#cb8-82" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-83"><a href="#cb8-83" aria-hidden="true" tabindex="-1"></a><span class="fu">## What drives the normal tail</span></span>
+<span id="cb8-84"><a href="#cb8-84" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-87"><a href="#cb8-87" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb8-88"><a href="#cb8-88" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: tbl-tail-composition</span></span>
+<span id="cb8-89"><a href="#cb8-89" aria-hidden="true" tabindex="-1"></a>tc <span class="sc">|&gt;</span></span>
+<span id="cb8-90"><a href="#cb8-90" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gt</span>() <span class="sc">|&gt;</span></span>
+<span id="cb8-91"><a href="#cb8-91" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_header</span>(<span class="at">title =</span> <span class="st">"Which Feature Dominates the Largest Normal Losses"</span>,</span>
+<span id="cb8-92"><a href="#cb8-92" aria-hidden="true" tabindex="-1"></a>             <span class="at">subtitle =</span> <span class="fu">sprintf</span>(<span class="st">"Held-out normal windows above τ 0.99 (n = %s)"</span>, <span class="fu">f_int</span>(<span class="fu">sum</span>(tc<span class="sc">$</span>n)))) <span class="sc">|&gt;</span></span>
+<span id="cb8-93"><a href="#cb8-93" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cols_label</span>(<span class="at">feature =</span> <span class="st">"Feature with the largest residual"</span>, <span class="at">n =</span> <span class="st">"Windows"</span>, <span class="at">share =</span> <span class="st">"Share"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb8-94"><a href="#cb8-94" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fmt_percent</span>(share, <span class="at">decimals =</span> <span class="dv">1</span>) <span class="sc">|&gt;</span></span>
+<span id="cb8-95"><a href="#cb8-95" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_options</span>(<span class="at">table.font.size =</span> <span class="dv">12</span>)</span>
+<span id="cb8-96"><a href="#cb8-96" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb8-97"><a href="#cb8-97" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-98"><a href="#cb8-98" aria-hidden="true" tabindex="-1"></a>**How to read the table.** We took the normal held-out windows with the highest losses, those above the 99% threshold, <span class="in">`r f_int(sum(tc$n))`</span> windows in all. For each one we recorded which single feature the model reconstructed worst, and the table counts how often each feature was that main culprit. Features not listed were never the largest contributor. The share column converts the counts into percentages of these extreme normal windows.</span>
+<span id="cb8-99"><a href="#cb8-99" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-100"><a href="#cb8-100" aria-hidden="true" tabindex="-1"></a>**What the table tells you.** Two rare counts, new service creations and privilege escalations, cause <span class="in">`r f_pct(sum(tc$share[tc$feature %in% c("host_new_service_creations", "auth_priv_escalations")]))`</span> of the most extreme normal losses. They are zero almost all the time, so a single occurrence looks wildly abnormal after standardization. That sets a high bar that a genuine volume-based attack must clear, and it breaks the smooth-tail assumption behind the threshold model. Modelling count features separately, or capping their contribution, is the obvious next step.</span>
+<span id="cb8-101"><a href="#cb8-101" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-102"><a href="#cb8-102" aria-hidden="true" tabindex="-1"></a><span class="fu">## Threshold diagnostics</span></span>
+<span id="cb8-103"><a href="#cb8-103" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-104"><a href="#cb8-104" aria-hidden="true" tabindex="-1"></a>The choice of $u$ and the GPD fit are assumptions. These plots test whether the assumptions are reasonable.</span>
+<span id="cb8-105"><a href="#cb8-105" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-108"><a href="#cb8-108" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb8-109"><a href="#cb8-109" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-threshold-choice</span></span>
+<span id="cb8-110"><a href="#cb8-110" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-height: 5</span></span>
+<span id="cb8-111"><a href="#cb8-111" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">3</span>), <span class="at">mar =</span> <span class="fu">c</span>(<span class="fl">4.5</span>, <span class="fl">4.5</span>, <span class="dv">3</span>, <span class="dv">1</span>))</span>
+<span id="cb8-112"><a href="#cb8-112" aria-hidden="true" tabindex="-1"></a>evd<span class="sc">::</span><span class="fu">mrlplot</span>(main<span class="sc">$</span>loss_val, <span class="at">tlim =</span> <span class="fu">quantile</span>(main<span class="sc">$</span>loss_val, <span class="fu">c</span>(<span class="fl">0.80</span>, <span class="fl">0.995</span>)),</span>
+<span id="cb8-113"><a href="#cb8-113" aria-hidden="true" tabindex="-1"></a>             <span class="at">main =</span> <span class="st">"Mean residual life"</span>, <span class="at">xlab =</span> <span class="st">"Threshold u"</span>)</span>
+<span id="cb8-114"><a href="#cb8-114" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">v =</span> pot<span class="sc">$</span>u, <span class="at">lty =</span> <span class="dv">2</span>, <span class="at">col =</span> <span class="st">"#e34948"</span>)</span>
+<span id="cb8-115"><a href="#cb8-115" aria-hidden="true" tabindex="-1"></a>evd<span class="sc">::</span><span class="fu">tcplot</span>(main<span class="sc">$</span>loss_val, <span class="at">tlim =</span> <span class="fu">quantile</span>(main<span class="sc">$</span>loss_val, <span class="fu">c</span>(<span class="fl">0.85</span>, <span class="fl">0.99</span>)), <span class="at">nt =</span> <span class="dv">15</span>,</span>
+<span id="cb8-116"><a href="#cb8-116" aria-hidden="true" tabindex="-1"></a>            <span class="at">which =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>, <span class="at">std.err =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb8-117"><a href="#cb8-117" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb8-118"><a href="#cb8-118" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-119"><a href="#cb8-119" aria-hidden="true" tabindex="-1"></a>**How to read the plots.** *Left:* the average amount by which losses exceed each candidate cut-off. Above a suitable cut-off this line should be roughly straight. *Middle and right:* the tail model's adjusted scale and its shape $\xi$, refitted at fifteen cut-offs between the 85% and 99% quantiles, with 95% intervals as vertical bars. A suitable cut-off is one above which these estimates stay flat. The dashed red line marks the cut-off actually chosen.</span>
+<span id="cb8-120"><a href="#cb8-120" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-121"><a href="#cb8-121" aria-hidden="true" tabindex="-1"></a>**What the plots tell you.** There is no stable region. The shape estimate keeps rising with the cut-off, from <span class="in">`r f_num(u_sens$xi[1])`</span> at the 90% quantile to <span class="in">`r f_num(u_sens$xi[4])`</span> at the 99% quantile, and the mean-excess line curves upward instead of straightening. One smooth tail model does not describe these losses well, because they mix ordinary errors with discrete count spikes. The chosen cut-off is a compromise, and the 99.9% threshold moves between <span class="in">`r f_num(min(u_sens$tau_999))`</span> and <span class="in">`r f_num(max(u_sens$tau_999))`</span> depending on it.</span>
+<span id="cb8-122"><a href="#cb8-122" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-125"><a href="#cb8-125" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb8-126"><a href="#cb8-126" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-gpd-fit</span></span>
+<span id="cb8-127"><a href="#cb8-127" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-height: 5</span></span>
+<span id="cb8-128"><a href="#cb8-128" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>), <span class="at">mar =</span> <span class="fu">c</span>(<span class="fl">4.5</span>, <span class="fl">4.5</span>, <span class="dv">3</span>, <span class="dv">1</span>))</span>
+<span id="cb8-129"><a href="#cb8-129" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(pot<span class="sc">$</span>fit, <span class="at">which =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">4</span>))</span>
+<span id="cb8-130"><a href="#cb8-130" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb8-131"><a href="#cb8-131" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-132"><a href="#cb8-132" aria-hidden="true" tabindex="-1"></a>**How to read the plots.** *Left:* each point compares an observed tail loss with the value the fitted model predicts for it, and points on the diagonal mean a good fit. *Right:* the loss level the model implies for increasingly rare events, moving right on a logarithmic scale, with observed losses as crosses and dotted 95% bands. Bands that widen quickly mean the model is uncertain about how large the rarest losses can get.</span>
+<span id="cb8-133"><a href="#cb8-133" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-134"><a href="#cb8-134" aria-hidden="true" tabindex="-1"></a>**What the plots tell you.** The points follow the line through the body of the tail, then jump in a visible step: the cluster of count-spike windows that the smooth model cannot represent. Above that step the observed losses fall below the fitted curve, so the model may overstate the most extreme thresholds. The bands fan out quickly to the right, so thresholds for very rare events are far less certain than the 99.9% threshold used for alerts.</span>
+<span id="cb8-135"><a href="#cb8-135" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-136"><a href="#cb8-136" aria-hidden="true" tabindex="-1"></a><span class="fu">## Thresholds and their uncertainty</span></span>
+<span id="cb8-137"><a href="#cb8-137" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-138"><a href="#cb8-138" aria-hidden="true" tabindex="-1"></a>EVT earns its place when the alert rate must be far lower than 0.1%, below the range where the data contain enough examples. At a security operations centre (SOC) scoring <span class="in">`r f_int(vol)`</span> windows a day, even 0.1% means <span class="in">`r f_int(vol * 0.001)`</span> alerts a day.</span>
+<span id="cb8-139"><a href="#cb8-139" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-142"><a href="#cb8-142" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb8-143"><a href="#cb8-143" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: tbl-deep-quantiles</span></span>
+<span id="cb8-144"><a href="#cb8-144" aria-hidden="true" tabindex="-1"></a><span class="fu">tibble</span>(<span class="at">q =</span> q, <span class="at">tau =</span> main<span class="sc">$</span>taus, <span class="at">emp =</span> emp) <span class="sc">|&gt;</span></span>
+<span id="cb8-145"><a href="#cb8-145" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(boot_ci, <span class="at">by =</span> <span class="fu">join_by</span>(q)) <span class="sc">|&gt;</span></span>
+<span id="cb8-146"><a href="#cb8-146" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">alerts_per_day =</span> (<span class="dv">1</span> <span class="sc">-</span> q) <span class="sc">*</span> vol, <span class="at">q_lab =</span> <span class="fu">paste0</span>(<span class="fu">formatC</span>(<span class="dv">100</span> <span class="sc">*</span> q, <span class="at">format =</span> <span class="st">"f"</span>, <span class="at">digits =</span> <span class="dv">3</span>), <span class="st">"%"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb8-147"><a href="#cb8-147" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(q_lab, tau, lo, hi, emp, alerts_per_day) <span class="sc">|&gt;</span></span>
+<span id="cb8-148"><a href="#cb8-148" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gt</span>() <span class="sc">|&gt;</span></span>
+<span id="cb8-149"><a href="#cb8-149" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_header</span>(<span class="at">title =</span> <span class="st">"Alert Thresholds at Increasing Rarity"</span>,</span>
+<span id="cb8-150"><a href="#cb8-150" aria-hidden="true" tabindex="-1"></a>             <span class="at">subtitle =</span> <span class="fu">sprintf</span>(<span class="st">"Held-out fit; 95%% block-bootstrap interval from %s resamples of host-days"</span>, <span class="fu">f_int</span>(cfg<span class="sc">$</span>evt<span class="sc">$</span>bootstrap_B))) <span class="sc">|&gt;</span></span>
+<span id="cb8-151"><a href="#cb8-151" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cols_label</span>(<span class="at">q_lab =</span> <span class="st">"Quantile q"</span>, <span class="at">tau =</span> <span class="st">"EVT τ"</span>, <span class="at">lo =</span> <span class="st">"95% CI low"</span>, <span class="at">hi =</span> <span class="st">"95% CI high"</span>,</span>
+<span id="cb8-152"><a href="#cb8-152" aria-hidden="true" tabindex="-1"></a>             <span class="at">emp =</span> <span class="st">"Empirical quantile"</span>, <span class="at">alerts_per_day =</span> <span class="fu">sprintf</span>(<span class="st">"Normal alerts / day at %s windows"</span>, <span class="fu">f_int</span>(vol))) <span class="sc">|&gt;</span></span>
+<span id="cb8-153"><a href="#cb8-153" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fmt_number</span>(<span class="fu">c</span>(tau, lo, hi, emp), <span class="at">decimals =</span> <span class="dv">3</span>) <span class="sc">|&gt;</span></span>
+<span id="cb8-154"><a href="#cb8-154" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fmt_number</span>(alerts_per_day, <span class="at">decimals =</span> <span class="dv">0</span>) <span class="sc">|&gt;</span></span>
+<span id="cb8-155"><a href="#cb8-155" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sub_missing</span>(<span class="at">missing_text =</span> <span class="st">"too few data"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb8-156"><a href="#cb8-156" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_options</span>(<span class="at">table.font.size =</span> <span class="dv">12</span>)</span>
+<span id="cb8-157"><a href="#cb8-157" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb8-158"><a href="#cb8-158" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-159"><a href="#cb8-159" aria-hidden="true" tabindex="-1"></a>**How to read the table.** Each row is a rarer alert level. "EVT τ" is the threshold from the fitted tail. The interval columns show its range when the analysis is repeated on resampled data, keeping whole host-days together so neighbouring windows stay linked. "Empirical quantile" is the plain data answer, shown only where at least <span class="in">`r cfg$evt$min_empirical_exceedances`</span> held-out windows exceed it. The last column is benign alerts per day at <span class="in">`r f_int(vol)`</span> windows a day.</span>
+<span id="cb8-160"><a href="#cb8-160" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-161"><a href="#cb8-161" aria-hidden="true" tabindex="-1"></a>**What the table tells you.** The 99.9% threshold is <span class="in">`r f_num(tau[["q0.999"]], 3)`</span> with an interval of <span class="in">`r f_num(boot_ci$lo[2], 3)`</span>–<span class="in">`r f_num(boot_ci$hi[2], 3)`</span>: a range, not a precise value. Beyond 99.99% the data hold too few examples for a plain answer, so the fitted tail is the only basis for a threshold, and its intervals widen sharply (<span class="in">`r f_num(boot_ci$lo[4], 1)`</span>–<span class="in">`r f_num(boot_ci$hi[4], 1)`</span> at 99.999%). Those rarer levels are what a large security operations centre would need to keep alert volumes manageable.</span>
+<span id="cb8-162"><a href="#cb8-162" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-163"><a href="#cb8-163" aria-hidden="true" tabindex="-1"></a><span class="fu">## Calibration on new hosts</span></span>
+<span id="cb8-164"><a href="#cb8-164" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-165"><a href="#cb8-165" aria-hidden="true" tabindex="-1"></a>A threshold meant to produce 0.1% false alarms should produce about 0.1% on hosts it was not fitted on. This table checks that.</span>
+<span id="cb8-166"><a href="#cb8-166" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-169"><a href="#cb8-169" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb8-170"><a href="#cb8-170" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: tbl-calibration</span></span>
+<span id="cb8-171"><a href="#cb8-171" aria-hidden="true" tabindex="-1"></a>cal <span class="sc">|&gt;</span></span>
+<span id="cb8-172"><a href="#cb8-172" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">q_lab =</span> <span class="fu">paste0</span>(<span class="fu">formatC</span>(<span class="dv">100</span> <span class="sc">*</span> q, <span class="at">format =</span> <span class="st">"f"</span>, <span class="at">digits =</span> <span class="dv">3</span>), <span class="st">"%"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb8-173"><a href="#cb8-173" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(q_lab, tau, n_normal, expected_fp, observed_fp, p_value) <span class="sc">|&gt;</span></span>
+<span id="cb8-174"><a href="#cb8-174" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gt</span>() <span class="sc">|&gt;</span></span>
+<span id="cb8-175"><a href="#cb8-175" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_header</span>(<span class="at">title =</span> <span class="st">"Observed vs Expected False Alarms"</span>, <span class="at">subtitle =</span> <span class="st">"Clean test hosts, main seed; exact binomial test"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb8-176"><a href="#cb8-176" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cols_label</span>(<span class="at">q_lab =</span> <span class="st">"Quantile q"</span>, <span class="at">tau =</span> <span class="st">"τ"</span>, <span class="at">n_normal =</span> <span class="st">"Normal windows"</span>, <span class="at">expected_fp =</span> <span class="st">"Expected"</span>,</span>
+<span id="cb8-177"><a href="#cb8-177" aria-hidden="true" tabindex="-1"></a>             <span class="at">observed_fp =</span> <span class="st">"Observed"</span>, <span class="at">p_value =</span> <span class="st">"Binomial p-value"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb8-178"><a href="#cb8-178" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fmt_number</span>(tau, <span class="at">decimals =</span> <span class="dv">3</span>) <span class="sc">|&gt;</span></span>
+<span id="cb8-179"><a href="#cb8-179" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fmt_number</span>(expected_fp, <span class="at">decimals =</span> <span class="dv">1</span>) <span class="sc">|&gt;</span></span>
+<span id="cb8-180"><a href="#cb8-180" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fmt_integer</span>(n_normal) <span class="sc">|&gt;</span></span>
+<span id="cb8-181"><a href="#cb8-181" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fmt_number</span>(p_value, <span class="at">decimals =</span> <span class="dv">3</span>) <span class="sc">|&gt;</span></span>
+<span id="cb8-182"><a href="#cb8-182" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_options</span>(<span class="at">table.font.size =</span> <span class="dv">12</span>)</span>
+<span id="cb8-183"><a href="#cb8-183" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb8-184"><a href="#cb8-184" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-185"><a href="#cb8-185" aria-hidden="true" tabindex="-1"></a>**How to read the table.** For each alert level, "Expected" is how many of the <span class="in">`r f_int(n_normal_test)`</span> normal test windows should cross the threshold if it were exactly right, and "Observed" is how many did. These windows come from hosts that were not used to set the threshold. The p-value says how surprising the gap would be by chance alone. Values below about 0.05 suggest the threshold is genuinely off rather than unlucky.</span>
+<span id="cb8-186"><a href="#cb8-186" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-187"><a href="#cb8-187" aria-hidden="true" tabindex="-1"></a>**What the table tells you.** At 99.9% the test hosts produced <span class="in">`r cal$observed_fp[2]`</span> false alarms against <span class="in">`r f_num(cal$expected_fp[2], 1)`</span> expected (p = <span class="in">`r f_num(cal$p_value[2], 3)`</span>). At 99% they produced <span class="in">`r cal$observed_fp[1]`</span> against <span class="in">`r f_num(cal$expected_fp[1], 1)`</span>. The threshold is off in both directions, because each host has its own baseline. Across <span class="in">`r n_seeds`</span> seeds, false alarms at 99.9% ranged from <span class="in">`r f_num(rob_get("False alarms at 99.9%")$lo, 0)`</span> to <span class="in">`r f_num(rob_get("False alarms at 99.9%")$hi, 0)`</span>. Thresholds set per host or per role would be the natural fix.</span>
+<span id="cb8-188"><a href="#cb8-188" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-189"><a href="#cb8-189" aria-hidden="true" tabindex="-1"></a><span class="fu">## Clustering of alerts</span></span>
+<span id="cb8-190"><a href="#cb8-190" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-191"><a href="#cb8-191" aria-hidden="true" tabindex="-1"></a>Exceedances are not independent: one busy period produces several high-loss windows in a row. The extremal index $\theta$ measures this. $1/\theta$ is the average number of exceedances per cluster. We estimate it with the runs method: exceedances within <span class="in">`r cfg$evt$decluster_run_length`</span> windows of each other belong to one cluster.</span>
+<span id="cb8-192"><a href="#cb8-192" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-195"><a href="#cb8-195" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb8-196"><a href="#cb8-196" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: tbl-decluster</span></span>
+<span id="cb8-197"><a href="#cb8-197" aria-hidden="true" tabindex="-1"></a>theta <span class="ot">&lt;-</span> dc<span class="sc">$</span>theta</span>
+<span id="cb8-198"><a href="#cb8-198" aria-hidden="true" tabindex="-1"></a><span class="fu">tibble</span>(<span class="at">q =</span> q[<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>]) <span class="sc">|&gt;</span></span>
+<span id="cb8-199"><a href="#cb8-199" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb8-200"><a href="#cb8-200" aria-hidden="true" tabindex="-1"></a>    <span class="at">q_lab =</span> <span class="fu">paste0</span>(<span class="fu">formatC</span>(<span class="dv">100</span> <span class="sc">*</span> q, <span class="at">format =</span> <span class="st">"f"</span>, <span class="at">digits =</span> <span class="dv">2</span>), <span class="st">"%"</span>),</span>
+<span id="cb8-201"><a href="#cb8-201" aria-hidden="true" tabindex="-1"></a>    <span class="at">windows =</span> (<span class="dv">1</span> <span class="sc">-</span> q) <span class="sc">*</span> vol,</span>
+<span id="cb8-202"><a href="#cb8-202" aria-hidden="true" tabindex="-1"></a>    <span class="at">incidents =</span> theta <span class="sc">*</span> windows</span>
+<span id="cb8-203"><a href="#cb8-203" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb8-204"><a href="#cb8-204" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(q_lab, windows, incidents) <span class="sc">|&gt;</span></span>
+<span id="cb8-205"><a href="#cb8-205" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gt</span>() <span class="sc">|&gt;</span></span>
+<span id="cb8-206"><a href="#cb8-206" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_header</span>(<span class="at">title =</span> <span class="st">"From Window Exceedances to Distinct Alert Clusters"</span>,</span>
+<span id="cb8-207"><a href="#cb8-207" aria-hidden="true" tabindex="-1"></a>             <span class="at">subtitle =</span> <span class="fu">sprintf</span>(<span class="st">"Extremal index θ = %.2f; volume %s windows per day"</span>, theta, <span class="fu">f_int</span>(vol))) <span class="sc">|&gt;</span></span>
+<span id="cb8-208"><a href="#cb8-208" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cols_label</span>(<span class="at">q_lab =</span> <span class="st">"Quantile q"</span>, <span class="at">windows =</span> <span class="st">"Normal windows alerting / day"</span>, <span class="at">incidents =</span> <span class="st">"Distinct clusters / day"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb8-209"><a href="#cb8-209" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fmt_number</span>(<span class="fu">c</span>(windows, incidents), <span class="at">decimals =</span> <span class="dv">0</span>) <span class="sc">|&gt;</span></span>
+<span id="cb8-210"><a href="#cb8-210" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_options</span>(<span class="at">table.font.size =</span> <span class="dv">12</span>)</span>
+<span id="cb8-211"><a href="#cb8-211" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb8-212"><a href="#cb8-212" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-213"><a href="#cb8-213" aria-hidden="true" tabindex="-1"></a>**How to read the table.** Alerts tend to arrive in bursts: one busy period produces several high-loss windows in a row. The first column is the number of benign windows per day that would cross each threshold at <span class="in">`r f_int(vol)`</span> windows a day. The second groups windows that fire within <span class="in">`r cfg$evt$decluster_run_length`</span> windows of each other into a single cluster. That is closer to the number of separate incidents an analyst must actually open and close.</span>
+<span id="cb8-214"><a href="#cb8-214" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-215"><a href="#cb8-215" aria-hidden="true" tabindex="-1"></a>**What the table tells you.** The extremal index of <span class="in">`r f_num(theta)`</span> means about <span class="in">`r f_num(1 / theta, 1)`</span> exceedances per cluster on average, so grouping cuts the triage load only modestly: <span class="in">`r f_int(dc$n_exceed)`</span> exceedances form <span class="in">`r f_int(dc$n_clusters)`</span> clusters. The tail shape barely changes when fitted to cluster peaks ($\xi = <span class="in">`r f_num(dc$fit$estimate[["shape"]], 3)`</span>$). Even at the 99.99% level this detector alone would raise about <span class="in">`r f_int(theta * vol * 1e-4)`</span> benign alert clusters a day at this volume, far too many to act on automatically.</span>
+</code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+      &nbsp;
+    </div>   
+    <div class="nav-footer-center">
+<p>© 2026 Patrick Lefler ⦁ <a href="./license.html">MIT License</a> ⦁ Built with R &amp; Quarto</p>
+</div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+<script src="site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>

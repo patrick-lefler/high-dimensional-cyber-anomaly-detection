@@ -1,0 +1,274 @@
+---
+title: "Detector: Simulation & Shallow Autoencoder"
+subtitle: "Cyber Anomaly Detection & Dependency Risk: synthetic telemetry, attack scenarios, and a base-R autoencoder"
+author: Patrick Lefler
+date: "2026-08-13"
+date-modified: "2026-11-18"
+---
+
+```{r}
+#| label: setup
+#| include: false
+source("R/pages/setup.R")
+sim <- cfg$simulation
+k <- cfg$autoencoder$bottleneck
+m <- main$model
+floor_indep <- (d_features - k) / d_features
+pca4 <- analysis$arch_sweep |> filter(model == "PCA, k = 4 (linear reference)")
+```
+
+## Unit of observation
+
+**One row = one host × one 5-minute window**, with that window's authentication activity for the host's users joined in. Each simulated host runs for `r sim$n_days` days (`r f_int(sim$n_days * 288)` windows) starting on a Monday. Hosts are split, not windows, so the model is always scored on hosts it has never seen:
+
+| Set | Hosts | Windows | Use |
+|---|---|---|---|
+| Training | `r sim$hosts_train` | `r f_int(nrow(main$pp$X_train))` | Fit preprocessing and the autoencoder |
+| Validation (held-out) | `r sim$hosts_val` | `r f_int(nrow(main$pp$X_val))` | Early stopping and the EVT threshold fit |
+| Test, normal | `r sim$hosts_test` | `r f_int(n_normal_test)` | Measure false alarms |
+| Test, attacks | `r sim$hosts_attack_pool` (attack pool) | `r f_int(n_attack_test)` | Measure detection |
+
+All data on this site are **simulated**. Every parameter is in `params.yaml` and labelled as an assumption.
+
+**How to read the table.** Each row is one slice of the simulated data. A host is one simulated machine, and a window is five minutes of its activity, so one host over `r sim$n_days` days contributes `r f_int(sim$n_days * 288)` windows. The last column says what each slice is used for. Training data teaches the model what normal looks like. The other slices come from different hosts and are used only to set thresholds and to measure performance.
+
+**What the table tells you.** The model is always judged on machines it has never seen, which is closer to a real deployment than reusing windows from the same machines. The test set holds `r f_int(n_normal_test)` normal windows and `r f_int(n_attack_test)` attack windows, so attacks make up about `r f_pct(n_attack_test / (n_attack_test + n_normal_test), 0)` of it, far more than on any real network. That proportion flatters some measures, which the Evaluation page corrects for.
+
+## Telemetry generator
+
+The original version of this study drew all 16 features independently. With independent, unit-variance inputs, a 4-unit bottleneck can at best keep 4 of 16 dimensions, so the lowest achievable reconstruction error was $12/16 = 0.75$. That was exactly where the old training curve flattened. The plateau did not show the model learning business patterns. It showed the model hitting the floor for data with no structure to learn.
+
+The generator now has structure. Each feature is driven by shared latent factors through a Gaussian copula:
+
+- **Business activity** follows a daily cycle peaking at `r sim$diurnal_peak_hour`:00, is lower at weekends (`r f_pct(sim$weekend_activity, 0)` of the weekday peak), and has AR(1) persistence ($\phi = `r sim$ar_phi`$).
+- **Host workload**, plus shared network-volume, authentication-volume and process-activity factors, each AR(1) with $\phi = `r sim$ar_phi`$.
+- **Host role**, a constant per host, so hosts differ from one another, as real fleets do.
+
+For each window the latent factors plus independent noise give correlated standard-normal scores. `pnorm()` turns these into uniforms, and the quantile function of each target distribution (`qpois`, `qlnorm`, `qbeta`, …) maps them onto realistic marginals. Three features were added to support a real lateral-movement scenario: new destination hosts, SMB/RDP/WinRM connections and new service creations. That makes $d = `r d_features`$.
+
+```{r}
+#| label: tbl-features
+marginal_text <- c(
+  auth_failed_logins = "Poisson(1.2)", auth_priv_escalations = "Poisson(0.1)",
+  auth_unique_source_ips = "1 + Poisson(2)", auth_off_hours_flag = "Bernoulli(0.08)",
+  auth_token_refresh_rate = "Normal(12, 2.5)", auth_new_dest_hosts = "Poisson(0.5)",
+  net_bytes_out_kb = "Log-normal(7.5, 0.8)", net_packet_velocity = "Normal(450, 60)",
+  net_port_entropy = "Uniform(0.15, 0.45)", net_dns_query_rate = "Poisson(35)",
+  net_tls_duration_sec = "5 + Exponential(mean 45)", net_syn_ack_ratio = "Normal(1.02, 0.05)",
+  net_smb_rdp_winrm_conns = "Poisson(1.5)", host_cpu_utilization = "100 × Beta(4, 6)",
+  host_memory_pressure = "Normal(62, 8)", host_child_process_cnt = "Poisson(8)",
+  host_fs_write_bursts = "Poisson(14)", host_active_threads = "Normal(120, 15)",
+  host_new_service_creations = "Poisson(0.05)"
+)
+factor_label <- c(A = "activity", W = "workload", R = "role", G_net = "network volume",
+                  G_auth = "auth volume", G_proc = "process activity")
+feature_spec |>
+  pivot_longer(all_of(latent_names), names_to = "factor", values_to = "loading") |>
+  filter(loading != 0) |>
+  summarise(drivers = paste0(factor_label[factor], " (", sprintf("%+.2f", loading), ")", collapse = ", "),
+            .by = c(feature, plane)) |>
+  mutate(marginal = marginal_text[feature], .after = plane) |>
+  gt() |>
+  tab_header(title = "Simulated Telemetry Features", subtitle = "Marginal distribution and latent-factor loadings") |>
+  cols_label(feature = "Feature", plane = "Plane", marginal = "Marginal distribution",
+             drivers = "Latent drivers (loading)") |>
+  tab_options(table.font.size = 12)
+```
+
+**How to read the table.** Each row is one simulated telemetry feature, grouped by plane: identity, network or host. "Marginal distribution" is the shape the feature takes on its own, such as a count with a given average. "Latent drivers" lists the hidden factors that move the feature and how strongly, on a scale from −1 to +1. Two features that share a driver tend to rise and fall together, as related measurements do in real systems.
+
+**What the table tells you.** Almost every feature responds to business activity, so the whole feature set follows the working day. Smaller groups share narrower factors: bytes, packets and TLS session length move together, as do CPU, threads and child processes. That shared structure is what any detector can learn and exploit. A few rare counts, such as new service creations, have almost no shared structure, and they turn out to cause most false alarms later on.
+
+```{r}
+#| label: tbl-correlation-targets
+host1 <- main$study$train
+pairs <- tribble(
+  ~a,                        ~b,                          ~target,
+  "net_bytes_out_kb",        "net_packet_velocity",       0.6,
+  "net_bytes_out_kb",        "net_tls_duration_sec",      0.5,
+  "auth_failed_logins",      "auth_unique_source_ips",    0.4,
+  "host_cpu_utilization",    "host_active_threads",       0.6,
+  "host_cpu_utilization",    "host_child_process_cnt",    0.4
+)
+cor_check <- pairs |>
+  mutate(realized = map2_dbl(a, b, \(x, y) train_cor[x, y])) |>
+  add_row(a = "auth_off_hours_flag", b = "latent business activity (host 1)", target = -0.3,
+          realized = cor(host1$auth_off_hours_flag, host1$activity_index))
+cor_check |>
+  gt() |>
+  tab_header(title = "Target vs Realized Correlations", subtitle = "Spearman correlation on the training windows") |>
+  cols_label(a = "Feature", b = "Paired with", target = "Target ρ", realized = "Realized ρ") |>
+  fmt_number(c(target, realized), decimals = 2) |>
+  tab_options(table.font.size = 12)
+```
+
+**How to read the table.** Each row pairs two features that the independent review asked to be correlated, as they would be in real telemetry. "Target" is the correlation designed into the simulator, and "Realized" is what the simulated training data actually shows. Correlation runs from −1, where one feature always falls as the other rises, through 0, no relationship, to +1, where the two always move together. The last row compares off-hours logins with overall business activity.
+
+**What the table tells you.** Every realized correlation lands within `r f_num(max(abs(cor_check$realized - cor_check$target)))` of its target, so the simulator produces the relationships it was designed to produce. That matters because the original version drew every feature independently, which left a model nothing to learn beyond distance from average. The negative off-hours relationship is also as intended: logins outside working hours happen when the business is quiet, so they are mildly unusual in their own right.
+
+```{r}
+#| label: fig-correlation-heatmap
+#| fig-height: 8
+as_tibble(train_cor, rownames = "x") |>
+  pivot_longer(-x, names_to = "y", values_to = "rho") |>
+  mutate(x = factor(x, levels = feature_cols), y = factor(y, levels = rev(feature_cols))) |>
+  ggplot(aes(x, y, fill = rho)) +
+  geom_tile(colour = "white", linewidth = 0.5) +
+  scale_fill_gradient2(low = "#e34948", mid = "#f0efec", high = "#2a78d6", midpoint = 0,
+                       limits = c(-1, 1), name = "Spearman ρ") +
+  labs(title = "Realized Correlation Matrix", subtitle = "Training windows, all four training hosts", x = NULL, y = NULL) +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1, size = 9), axis.text.y = element_text(size = 9),
+        panel.grid = element_blank())
+```
+
+**How to read the plot.** Each square shows how strongly two features move together across the training data. Blue means they rise together, red means one rises as the other falls, and pale grey means no relationship. Darker colour means a stronger relationship. The diagonal compares each feature with itself and is always solid blue. The matrix is symmetric, so the lower-left triangle mirrors the upper-right, and reading either half is enough to see the full pattern.
+
+**What the plot tells you.** The features form blocks: network-volume measures move together, host-process measures move together, and a faint blue wash across almost everything reflects the shared business-activity cycle. Off-hours logins form the only negative row. Rare counts such as privilege escalations and new service creations are nearly unrelated to everything else, so their occasional spikes cannot be predicted from other features. That later drives the heavy tail of normal losses on the Thresholds page.
+
+```{r}
+#| label: fig-seasonality
+host1 |>
+  filter(timestamp >= as.POSIXct("2026-01-09", tz = "UTC"), timestamp < as.POSIXct("2026-01-12", tz = "UTC")) |>
+  select(timestamp, `Outbound KB` = net_bytes_out_kb, `Failed logins` = auth_failed_logins,
+         `CPU utilization (%)` = host_cpu_utilization) |>
+  pivot_longer(-timestamp) |>
+  mutate(hourly = as.numeric(stats::filter(value, rep(1 / 12, 12), sides = 2)), .by = name) |>
+  ggplot(aes(timestamp)) +
+  geom_line(aes(y = value), colour = "#c3c2b7", linewidth = 0.3) +
+  geom_line(aes(y = hourly), colour = "#2a78d6", linewidth = 1) +
+  facet_wrap(~name, ncol = 1, scales = "free_y") +
+  scale_x_datetime(date_breaks = "12 hours", date_labels = "%a %H:%M") +
+  labs(title = "Three Days of Telemetry for One Host",
+       subtitle = "Friday to Sunday; grey = 5-minute windows, blue = 1-hour rolling mean",
+       x = NULL, y = NULL)
+```
+
+**How to read the plot.** Each panel shows one feature for one simulated host from Friday through Sunday. The grey line is the raw value in each five-minute window, and the blue line is a one-hour rolling average that smooths out window-to-window noise so the underlying rhythm is visible. The horizontal axis marks days and times. Each panel has its own vertical scale, because the three features are measured in different units: kilobytes, a count and a percentage.
+
+**What the plot tells you.** The hourly averages rise during Friday working hours, fall overnight, and show smaller bumps at the weekend. Short runs of high or low values show that busy periods persist from one window to the next. The daily cycle is modest next to the window-to-window noise, as it is in real telemetry. The original simulator had none of this: every row was an independent draw with no notion of time, day or host.
+
+## Attack scenarios
+
+Each attack is injected into real normal windows from separate attack-pool hosts, at three intensity tiers with `r sim$n_attacks_per_cell` windows per cell. The high tier reproduces the original study's magnitudes. The low tier is the stealthy case.
+
+```{r}
+#| label: tbl-attacks
+rng <- \(r) sprintf("×%s–%s", r[[1]], r[[2]])
+cnt <- \(add, pois) paste0("+", if (add > 0) add else "", if (add > 0 && pois > 0) " + " else "", if (pois > 0) sprintf("Poisson(%s)", pois) else "")
+desc <- list(
+  data_exfiltration = \(s) sprintf("bytes %s, TLS duration %s, port entropy %s", rng(s$bytes_mult), rng(s$tls_mult), rng(s$entropy_mult)),
+  credential_stuffing = \(s) sprintf("source IPs %s, failed logins %s", cnt(s$ips_add, s$ips_pois), cnt(s$fails_add, s$fails_pois)),
+  privilege_escalation = \(s) sprintf("privilege escalations +%s", s$priv_add),
+  ransomware_staging = \(s) sprintf("child processes %s, file-write bursts %s, DNS %s", cnt(s$child_add, s$child_pois), cnt(s$fs_add, s$fs_pois), rng(s$dns_mult)),
+  lateral_movement = \(s) sprintf("new destination hosts %s, SMB/RDP/WinRM %s, new services +%s%s", cnt(s$dest_add, s$dest_pois), cnt(s$smb_add, s$smb_pois), s$svc_add, if (s$svc_prob > 0) sprintf(" + Bernoulli(%s)", s$svc_prob) else "")
+)
+ls <- cfg$low_and_slow
+attack_table <- imap(cfg$attacks, \(a, key) {
+  tibble(scenario = a$label, tier = tier_levels, change = map_chr(tier_levels, \(t) desc[[key]](a[[t]])))
+}) |>
+  bind_rows() |>
+  add_row(scenario = ls$label, tier = "low",
+          change = sprintf("%d campaigns of %d–%d consecutive windows: bytes %s, TLS %s, port entropy %s",
+                           ls$n_campaigns, ls$length[[1]], ls$length[[2]], rng(ls$bytes_mult), rng(ls$tls_mult), rng(ls$entropy_mult)))
+attack_table |>
+  gt(groupname_col = "scenario") |>
+  tab_header(title = "Attack Scenarios by Intensity Tier", subtitle = "Changes applied to a normal window") |>
+  cols_label(tier = "Tier", change = "Change applied") |>
+  tab_options(table.font.size = 12, row_group.font.weight = "bold")
+```
+
+**How to read the table.** Each group is one attack type and each row one intensity tier, from low (stealthy) to high (loud). The last column describes how a normal window is altered to create the attack. "×1.5–3" means the feature is multiplied by a random factor between 1.5 and 3, and "+Poisson(2)" means a random count averaging 2 is added. Low-and-slow exfiltration spreads modest changes across one to four hours of consecutive windows.
+
+**What the table tells you.** The high tier reproduces the original study's attack sizes, and the low tier is the realistic stealthy case. Three design changes matter. Exfiltration now slightly lowers port entropy instead of pushing it out of range, which had made it trivially separable. Privilege escalation is now its own scenario. The old "zero-day lateral movement" is renamed ransomware staging, which it resembles, and true lateral movement now uses new host-to-host features.
+
+## Preprocessing
+
+A `recipes` pipeline applies a Yeo-Johnson transform and then standardizes each feature to zero mean and unit variance. Both steps are estimated on the training hosts only and applied unchanged to validation and test windows, so no information leaks from evaluation data.
+
+## Shallow autoencoder
+
+**Architecture.** Let $X \in \mathbb{R}^{N \times d}$ be a batch of $N$ windows across $d = `r d_features`$ features. The encoder maps to a $k = `r k`$-unit bottleneck with a $\tanh$ activation, and a linear decoder maps back:
+
+$$Z = \tanh\left(X W_e + \mathbf{1}_N \mathbf{b}_e^\top\right), \qquad \hat{X} = Z W_d + \mathbf{1}_N \mathbf{b}_d^\top,$$
+
+with $W_e \in \mathbb{R}^{d \times k}$, $\mathbf{b}_e \in \mathbb{R}^k$, $W_d \in \mathbb{R}^{k \times d}$, $\mathbf{b}_d \in \mathbb{R}^d$. One hidden layer with a linear decoder is a **shallow** autoencoder, close to principal component analysis. The sensitivity table below confirms this.
+
+**Loss.** Training minimizes the batch mean squared error, and each window is scored by its own mean squared error over features:
+
+$$\mathcal{L}(X, \hat{X}) = \frac{1}{N d}\,\lVert X - \hat{X} \rVert_F^2, \qquad \ell(\mathbf{x}) = \frac{1}{d}\,\lVert \mathbf{x} - \hat{\mathbf{x}} \rVert^2 .$$
+
+**Gradients.** By matrix calculus,
+
+$$\frac{\partial \mathcal{L}}{\partial \hat{X}} = \frac{2}{N d}(\hat{X} - X), \quad
+\frac{\partial \mathcal{L}}{\partial W_d} = Z^\top \frac{\partial \mathcal{L}}{\partial \hat{X}}, \quad
+\frac{\partial \mathcal{L}}{\partial \mathbf{b}_d} = \mathbf{1}_N^\top \frac{\partial \mathcal{L}}{\partial \hat{X}},$$
+
+$$\Delta_Z = \left(\frac{\partial \mathcal{L}}{\partial \hat{X}} W_d^\top\right) \odot (1 - Z^2), \quad
+\frac{\partial \mathcal{L}}{\partial W_e} = X^\top \Delta_Z, \quad
+\frac{\partial \mathcal{L}}{\partial \mathbf{b}_e} = \mathbf{1}_N^\top \Delta_Z .$$
+
+Parameters are updated with Adam (bias-corrected first and second moments, learning rate `r cfg$autoencoder$lr`, batch size `r cfg$autoencoder$batch_size`) from Xavier-initialized weights. Training stops early when validation loss has not improved for `r cfg$autoencoder$patience` epochs, and the best weights are kept. The implementation (`R/ae.R`) handles any stack of $\tanh$ layers, which the sensitivity check uses.
+
+### Gradient check
+
+```{r}
+#| label: tbl-gradient-check
+analysis$grad_check |>
+  mutate(parameter = case_when(
+    model == "Shallow (d-4-d)" & layer == 1 ~ paste0(block, "_e (encoder)"),
+    model == "Shallow (d-4-d)" & layer == 2 ~ paste0(block, "_d (decoder)"),
+    .default = sprintf("layer %d %s", layer, block)
+  )) |>
+  select(model, parameter, n_params, rel_error) |>
+  gt(groupname_col = "model") |>
+  tab_header(title = "Analytic vs Finite-Difference Gradients",
+             subtitle = "Central differences, h = 1e-5, on a 32-window batch") |>
+  cols_label(parameter = "Parameter block", n_params = "Entries", rel_error = "Relative error") |>
+  fmt_scientific(rel_error, decimals = 1) |>
+  tab_options(table.font.size = 12, row_group.font.weight = "bold")
+```
+
+**How to read the table.** The autoencoder learns by following gradients: formulas that say how to adjust each weight to reduce error. We derived these by hand. Each row compares the hand-derived gradient for one block of weights with a brute-force estimate obtained by nudging every weight slightly and measuring how the error changes. The relative error column shows how far apart the two answers are, as a share of their size.
+
+**What the table tells you.** The largest disagreement is `r format(max(analysis$grad_check$rel_error), digits = 2)`, far below the one-in-a-million pass mark, for both the shallow model and the deeper variant. The hand-derived mathematics and the code that implements it agree, so the model is learning what we think it is learning. The unit tests repeat this check automatically every time the project runs, so a later code change cannot silently break the training.
+
+### Training
+
+```{r}
+#| label: fig-convergence
+tibble(epoch = seq_along(m$train_losses), Training = m$train_losses, Validation = m$val_losses) |>
+  pivot_longer(-epoch, names_to = "set", values_to = "mse") |>
+  ggplot(aes(epoch, mse, colour = set)) +
+  geom_hline(yintercept = floor_indep, linetype = "dashed", colour = "#52514e") +
+  annotate("text", x = length(m$train_losses) / 2, y = floor_indep, vjust = -0.5, hjust = 0.5, size = 3.5, colour = "#52514e",
+           label = sprintf("Floor if features were independent: (d - k)/d = %.3f", floor_indep)) +
+  geom_vline(xintercept = m$best_epoch, linetype = "dotted", colour = "#52514e") +
+  geom_line(linewidth = 1) +
+  scale_colour_manual(values = c(Training = "#2a78d6", Validation = "#eb6834"), name = NULL) +
+  labs(title = "Autoencoder Loss Convergence",
+       subtitle = sprintf("Mean squared error per epoch; dotted line = best validation epoch (%d)", m$best_epoch),
+       x = "Epoch", y = "Mean squared error")
+```
+
+**How to read the plot.** The horizontal axis counts training passes through the data (epochs), and the vertical axis is the average reconstruction error. Blue is error on the training hosts. Orange is error on held-out validation hosts that the model never trains on. The dashed line is the best any four-unit model could achieve if the features had no shared structure, and the dotted vertical line marks the epoch whose weights were kept.
+
+**What the plot tells you.** Training error settles at `r f_num(m$train_losses[m$best_epoch], 3)`, well below the no-structure floor of `r f_num(floor_indep, 3)`, so the model has found real shared patterns. Validation error (`r f_num(m$best_val_loss, 3)`) is slightly higher, probably because the validation hosts differ in role from the training hosts. A linear principal component analysis with four components reaches almost the same validation error (`r f_num(pca4$val_mse, 3)`), so the network is essentially learning what that simpler method learns.
+
+### Architecture sensitivity
+
+```{r}
+#| label: tbl-architecture
+analysis$arch_sweep |>
+  gt() |>
+  tab_header(title = "Architecture Sensitivity", subtitle = "Main seed; same training, validation and test windows") |>
+  cols_label(model = "Model", train_mse = "Training MSE", val_mse = "Validation MSE",
+             best_epoch = "Best epoch", roc_auc = "ROC AUC (all attacks)") |>
+  fmt_number(c(train_mse, val_mse, roc_auc), decimals = 3) |>
+  fmt_number(best_epoch, decimals = 0) |>
+  sub_missing(missing_text = "–") |>
+  tab_options(table.font.size = 12)
+```
+
+**How to read the table.** Each row is a different model trained on the same data. "d-4-d" means `r d_features` inputs squeezed through 4 internal units and expanded back to `r d_features` outputs, and the deeper model adds a layer on each side. The PCA rows are the linear equivalent with the same number of components. Lower reconstruction error means normal windows are copied more faithfully. ROC AUC measures how well attacks are ranked above normal windows, from 0.5 (chance) to 1.
+
+**What the table tells you.** Each autoencoder performs much like the PCA of the same size, in error and in detection. Better reconstruction does not mean better detection: the `r d_features`-8-`r d_features` model reconstructs best but ranks attacks worst of the autoencoders, because it also learns to copy part of the attack signal. The deeper network adds nothing on detection either. We keep the shallow four-unit model and test it against simple baselines on the Evaluation page.

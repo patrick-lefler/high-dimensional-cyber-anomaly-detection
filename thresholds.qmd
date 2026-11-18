@@ -1,0 +1,199 @@
+---
+title: "Alert Thresholds: Extreme Value Theory"
+subtitle: "Cyber Anomaly Detection & Dependency Risk: peaks-over-threshold fitting, uncertainty, diagnostics, and calibration"
+author: Patrick Lefler
+date: "2026-08-13"
+date-modified: "2026-11-18"
+---
+
+```{r}
+#| label: setup
+#| include: false
+source("R/pages/setup.R")
+pot <- main$pot
+pot_tr <- main$pot_train
+q <- main$q
+boot_ci <- analysis$boot |>
+  summarise(lo = quantile(tau, 0.025), hi = quantile(tau, 0.975), .by = q)
+xi_ci <- quantile(filter(analysis$boot, q == q[1])$xi, c(0.025, 0.975))
+cal <- analysis$calibration
+dc <- analysis$decluster
+tc <- analysis$tail_composition
+vol <- cfg$operations$windows_per_day
+emp <- empirical_quantile(main$loss_val, q, cfg$evt$min_empirical_exceedances)
+u_sens <- tibble(u_prob = c(0.90, 0.95, 0.975, 0.99)) |>
+  mutate(fit = map(u_prob, \(p) fit_pot(main$loss_val, p, std_err = FALSE)),
+         xi = map_dbl(fit, "xi"), tau_999 = map_dbl(fit, \(f) pot_taus(f, 0.999)))
+```
+
+## What the threshold is, and is not
+
+Every window gets a reconstruction loss $\ell(\mathbf{x})$ from the [Detector](detector.qmd). An alert fires when $\ell(\mathbf{x}) > \tau_q$. Here $\tau_q$ is the **$q$-quantile threshold** of the loss for normal windows: a normal window exceeds it with probability $1 - q$. "The 99.9% threshold" therefore means an exceedance probability of 0.1% per normal window. It is not a confidence level. It is also not adaptive: $\tau_q$ is estimated once and then fixed. Refitting it on a rolling window or by time of day is listed as further work.
+
+**Peaks over threshold (POT).** Above a high level $u$, the excesses $\ell - u$ are modelled with a Generalized Pareto Distribution (GPD) with scale $\sigma$ and shape $\xi$. With $N$ windows, $N_u$ of which exceed $u$,
+
+$$
+\tau_q =
+\begin{cases}
+u + \dfrac{\sigma}{\xi}\left[\left(\dfrac{N}{N_u}(1-q)\right)^{-\xi} - 1\right], & \xi \neq 0,\\[2ex]
+u + \sigma \ln\!\left(\dfrac{N_u}{N(1-q)}\right), & \xi = 0 .
+\end{cases}
+$$
+
+The second line is the exponential limit. The code (`gpd_tau()` in `R/evt.R`) switches to it when $|\xi| < 10^{-6}$, and a unit test checks that it returns a finite value at $\xi = 0$.
+
+**Held-out fitting.** The GPD is fitted to losses from the `r cfg$simulation$hosts_val` **validation hosts** (`r f_int(pot$N)` windows), which the autoencoder never trained on. Training losses are biased low, because the model has seen those windows. Their fit is kept only as a comparison row. We set $u$ at the `r f_pct(cfg$evt$u_prob, 0)` quantile.
+
+## Fitted parameters
+
+Without the fitted parameters a reader can't judge the shape of the tail or check the threshold arithmetic. The original report did not show them.
+
+```{r}
+#| label: tbl-gpd-fit
+pm <- \(est, se) sprintf("%.3f (%.3f)", est, se)
+fit_row <- \(p, label, losses) tibble(
+  fit = label, u = p$u, Nu = p$Nu, N = p$N,
+  sigma = pm(p$sigma, p$se[["scale"]]), xi = pm(p$xi, p$se[["shape"]]),
+  tau_990 = pot_taus(p, 0.99), tau_999 = pot_taus(p, 0.999),
+  emp_990 = quantile(losses, 0.99), emp_999 = quantile(losses, 0.999)
+)
+bind_rows(
+  fit_row(pot, "Held-out validation losses (used for alerts)", main$loss_val),
+  fit_row(pot_tr, "Training losses (comparison only)", main$loss_train)
+) |>
+  gt() |>
+  tab_header(title = "Generalized Pareto Fit to the Loss Tail", subtitle = "Standard errors in brackets") |>
+  cols_label(fit = "Fitted on", u = "u", Nu = "N_u", N = "N", sigma = "σ (SE)", xi = "ξ (SE)",
+             tau_990 = "τ 0.99", tau_999 = "τ 0.999", emp_990 = "Empirical 99%", emp_999 = "Empirical 99.9%") |>
+  tab_spanner("EVT thresholds", c(tau_990, tau_999)) |>
+  tab_spanner("Empirical quantiles", c(emp_990, emp_999)) |>
+  fmt_number(c(u, tau_990, tau_999, emp_990, emp_999), decimals = 3) |>
+  fmt_integer(c(Nu, N)) |>
+  tab_options(table.font.size = 12)
+```
+
+**How to read the table.** Each row is one fit of the tail model. $u$ is the loss level above which the tail is modelled, and $N_u$ counts how many windows exceed it. $\sigma$ sets the spread of the tail and $\xi$ its shape: positive means occasional very large values, zero means an exponential tail, negative means a hard ceiling. Standard errors are in brackets. The τ columns are the resulting alert thresholds, shown beside the plain sample quantiles.
+
+**What the table tells you.** The held-out tail is heavy, with $\xi = `r f_num(pot$xi, 3)`$ and a resampling range of `r f_num(xi_ci[1])` to `r f_num(xi_ci[2])`. Fitting on training losses would have set a lower 99.9% threshold (`r f_num(pot_taus(pot_tr, 0.999), 3)` against `r f_num(tau[["q0.999"]], 3)`) and raised more false alarms on new hosts. The fitted threshold sits below the plain sample quantile (`r f_num(quantile(main$loss_val, 0.999), 3)`), because the tail contains a step of count-driven spikes that a smooth curve cannot follow.
+
+## What drives the normal tail
+
+```{r}
+#| label: tbl-tail-composition
+tc |>
+  gt() |>
+  tab_header(title = "Which Feature Dominates the Largest Normal Losses",
+             subtitle = sprintf("Held-out normal windows above τ 0.99 (n = %s)", f_int(sum(tc$n)))) |>
+  cols_label(feature = "Feature with the largest residual", n = "Windows", share = "Share") |>
+  fmt_percent(share, decimals = 1) |>
+  tab_options(table.font.size = 12)
+```
+
+**How to read the table.** We took the normal held-out windows with the highest losses, those above the 99% threshold, `r f_int(sum(tc$n))` windows in all. For each one we recorded which single feature the model reconstructed worst, and the table counts how often each feature was that main culprit. Features not listed were never the largest contributor. The share column converts the counts into percentages of these extreme normal windows.
+
+**What the table tells you.** Two rare counts, new service creations and privilege escalations, cause `r f_pct(sum(tc$share[tc$feature %in% c("host_new_service_creations", "auth_priv_escalations")]))` of the most extreme normal losses. They are zero almost all the time, so a single occurrence looks wildly abnormal after standardization. That sets a high bar that a genuine volume-based attack must clear, and it breaks the smooth-tail assumption behind the threshold model. Modelling count features separately, or capping their contribution, is the obvious next step.
+
+## Threshold diagnostics
+
+The choice of $u$ and the GPD fit are assumptions. These plots test whether the assumptions are reasonable.
+
+```{r}
+#| label: fig-threshold-choice
+#| fig-height: 5
+par(mfrow = c(1, 3), mar = c(4.5, 4.5, 3, 1))
+evd::mrlplot(main$loss_val, tlim = quantile(main$loss_val, c(0.80, 0.995)),
+             main = "Mean residual life", xlab = "Threshold u")
+abline(v = pot$u, lty = 2, col = "#e34948")
+evd::tcplot(main$loss_val, tlim = quantile(main$loss_val, c(0.85, 0.99)), nt = 15,
+            which = 1:2, std.err = TRUE)
+```
+
+**How to read the plots.** *Left:* the average amount by which losses exceed each candidate cut-off. Above a suitable cut-off this line should be roughly straight. *Middle and right:* the tail model's adjusted scale and its shape $\xi$, refitted at fifteen cut-offs between the 85% and 99% quantiles, with 95% intervals as vertical bars. A suitable cut-off is one above which these estimates stay flat. The dashed red line marks the cut-off actually chosen.
+
+**What the plots tell you.** There is no stable region. The shape estimate keeps rising with the cut-off, from `r f_num(u_sens$xi[1])` at the 90% quantile to `r f_num(u_sens$xi[4])` at the 99% quantile, and the mean-excess line curves upward instead of straightening. One smooth tail model does not describe these losses well, because they mix ordinary errors with discrete count spikes. The chosen cut-off is a compromise, and the 99.9% threshold moves between `r f_num(min(u_sens$tau_999))` and `r f_num(max(u_sens$tau_999))` depending on it.
+
+```{r}
+#| label: fig-gpd-fit
+#| fig-height: 5
+par(mfrow = c(1, 2), mar = c(4.5, 4.5, 3, 1))
+plot(pot$fit, which = c(2, 4))
+```
+
+**How to read the plots.** *Left:* each point compares an observed tail loss with the value the fitted model predicts for it, and points on the diagonal mean a good fit. *Right:* the loss level the model implies for increasingly rare events, moving right on a logarithmic scale, with observed losses as crosses and dotted 95% bands. Bands that widen quickly mean the model is uncertain about how large the rarest losses can get.
+
+**What the plots tell you.** The points follow the line through the body of the tail, then jump in a visible step: the cluster of count-spike windows that the smooth model cannot represent. Above that step the observed losses fall below the fitted curve, so the model may overstate the most extreme thresholds. The bands fan out quickly to the right, so thresholds for very rare events are far less certain than the 99.9% threshold used for alerts.
+
+## Thresholds and their uncertainty
+
+EVT earns its place when the alert rate must be far lower than 0.1%, below the range where the data contain enough examples. At a security operations centre (SOC) scoring `r f_int(vol)` windows a day, even 0.1% means `r f_int(vol * 0.001)` alerts a day.
+
+```{r}
+#| label: tbl-deep-quantiles
+tibble(q = q, tau = main$taus, emp = emp) |>
+  left_join(boot_ci, by = join_by(q)) |>
+  mutate(alerts_per_day = (1 - q) * vol, q_lab = paste0(formatC(100 * q, format = "f", digits = 3), "%")) |>
+  select(q_lab, tau, lo, hi, emp, alerts_per_day) |>
+  gt() |>
+  tab_header(title = "Alert Thresholds at Increasing Rarity",
+             subtitle = sprintf("Held-out fit; 95%% block-bootstrap interval from %s resamples of host-days", f_int(cfg$evt$bootstrap_B))) |>
+  cols_label(q_lab = "Quantile q", tau = "EVT τ", lo = "95% CI low", hi = "95% CI high",
+             emp = "Empirical quantile", alerts_per_day = sprintf("Normal alerts / day at %s windows", f_int(vol))) |>
+  fmt_number(c(tau, lo, hi, emp), decimals = 3) |>
+  fmt_number(alerts_per_day, decimals = 0) |>
+  sub_missing(missing_text = "too few data") |>
+  tab_options(table.font.size = 12)
+```
+
+**How to read the table.** Each row is a rarer alert level. "EVT τ" is the threshold from the fitted tail. The interval columns show its range when the analysis is repeated on resampled data, keeping whole host-days together so neighbouring windows stay linked. "Empirical quantile" is the plain data answer, shown only where at least `r cfg$evt$min_empirical_exceedances` held-out windows exceed it. The last column is benign alerts per day at `r f_int(vol)` windows a day.
+
+**What the table tells you.** The 99.9% threshold is `r f_num(tau[["q0.999"]], 3)` with an interval of `r f_num(boot_ci$lo[2], 3)`–`r f_num(boot_ci$hi[2], 3)`: a range, not a precise value. Beyond 99.99% the data hold too few examples for a plain answer, so the fitted tail is the only basis for a threshold, and its intervals widen sharply (`r f_num(boot_ci$lo[4], 1)`–`r f_num(boot_ci$hi[4], 1)` at 99.999%). Those rarer levels are what a large security operations centre would need to keep alert volumes manageable.
+
+## Calibration on new hosts
+
+A threshold meant to produce 0.1% false alarms should produce about 0.1% on hosts it was not fitted on. This table checks that.
+
+```{r}
+#| label: tbl-calibration
+cal |>
+  mutate(q_lab = paste0(formatC(100 * q, format = "f", digits = 3), "%")) |>
+  select(q_lab, tau, n_normal, expected_fp, observed_fp, p_value) |>
+  gt() |>
+  tab_header(title = "Observed vs Expected False Alarms", subtitle = "Clean test hosts, main seed; exact binomial test") |>
+  cols_label(q_lab = "Quantile q", tau = "τ", n_normal = "Normal windows", expected_fp = "Expected",
+             observed_fp = "Observed", p_value = "Binomial p-value") |>
+  fmt_number(tau, decimals = 3) |>
+  fmt_number(expected_fp, decimals = 1) |>
+  fmt_integer(n_normal) |>
+  fmt_number(p_value, decimals = 3) |>
+  tab_options(table.font.size = 12)
+```
+
+**How to read the table.** For each alert level, "Expected" is how many of the `r f_int(n_normal_test)` normal test windows should cross the threshold if it were exactly right, and "Observed" is how many did. These windows come from hosts that were not used to set the threshold. The p-value says how surprising the gap would be by chance alone. Values below about 0.05 suggest the threshold is genuinely off rather than unlucky.
+
+**What the table tells you.** At 99.9% the test hosts produced `r cal$observed_fp[2]` false alarms against `r f_num(cal$expected_fp[2], 1)` expected (p = `r f_num(cal$p_value[2], 3)`). At 99% they produced `r cal$observed_fp[1]` against `r f_num(cal$expected_fp[1], 1)`. The threshold is off in both directions, because each host has its own baseline. Across `r n_seeds` seeds, false alarms at 99.9% ranged from `r f_num(rob_get("False alarms at 99.9%")$lo, 0)` to `r f_num(rob_get("False alarms at 99.9%")$hi, 0)`. Thresholds set per host or per role would be the natural fix.
+
+## Clustering of alerts
+
+Exceedances are not independent: one busy period produces several high-loss windows in a row. The extremal index $\theta$ measures this. $1/\theta$ is the average number of exceedances per cluster. We estimate it with the runs method: exceedances within `r cfg$evt$decluster_run_length` windows of each other belong to one cluster.
+
+```{r}
+#| label: tbl-decluster
+theta <- dc$theta
+tibble(q = q[1:3]) |>
+  mutate(
+    q_lab = paste0(formatC(100 * q, format = "f", digits = 2), "%"),
+    windows = (1 - q) * vol,
+    incidents = theta * windows
+  ) |>
+  select(q_lab, windows, incidents) |>
+  gt() |>
+  tab_header(title = "From Window Exceedances to Distinct Alert Clusters",
+             subtitle = sprintf("Extremal index θ = %.2f; volume %s windows per day", theta, f_int(vol))) |>
+  cols_label(q_lab = "Quantile q", windows = "Normal windows alerting / day", incidents = "Distinct clusters / day") |>
+  fmt_number(c(windows, incidents), decimals = 0) |>
+  tab_options(table.font.size = 12)
+```
+
+**How to read the table.** Alerts tend to arrive in bursts: one busy period produces several high-loss windows in a row. The first column is the number of benign windows per day that would cross each threshold at `r f_int(vol)` windows a day. The second groups windows that fire within `r cfg$evt$decluster_run_length` windows of each other into a single cluster. That is closer to the number of separate incidents an analyst must actually open and close.
+
+**What the table tells you.** The extremal index of `r f_num(theta)` means about `r f_num(1 / theta, 1)` exceedances per cluster on average, so grouping cuts the triage load only modestly: `r f_int(dc$n_exceed)` exceedances form `r f_int(dc$n_clusters)` clusters. The tail shape barely changes when fitted to cluster peaks ($\xi = `r f_num(dc$fit$estimate[["shape"]], 3)`$). Even at the 99.99% level this detector alone would raise about `r f_int(theta * vol * 1e-4)` benign alert clusters a day at this volume, far too many to act on automatically.

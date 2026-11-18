@@ -26,3 +26,8 @@ main table td, main table th { white-space: normal; vertical-align: top; }
   font-weight: 500;
   margin: 0.3rem 0 0.4rem;
 }
+
+/* Body and callout sizing carried over from the original single-page report */
+body { font-size: 18px; font-weight: 400; }
+.callout, .callout-body, .callout p { font-size: 0.83rem !important; line-height: 1.5 !important; }
+.callout-header, .callout-title { font-size: 0.83rem !important; font-weight: 600 !important; }

@@ -3,10 +3,14 @@ project:
   output-dir: docs
   render:
     - index.qmd
+    - dependency-graph.qmd
+    - detector.qmd
+    - thresholds.qmd
+    - evaluation.qmd
     - license.qmd
 
 website:
-  title: "Three Questions for Any Risk Model"
+  title: "Cyber Anomaly Detection & Dependency Risk"
   search: false
   page-navigation: true
   sidebar:
@@ -14,19 +18,47 @@ website:
     contents:
       - href: index.qmd
         text: Overview
+      - href: dependency-graph.qmd
+        text: Dependency Graph
+      - href: detector.qmd
+        text: Detector
+      - href: thresholds.qmd
+        text: Thresholds
+      - href: evaluation.qmd
+        text: Evaluation
   page-footer:
     center: "© 2026 Patrick Lefler ⦁ [MIT License](license.qmd) ⦁ Built with R & Quarto"
-    
-  
+
 format:
   html:
-    theme: [cosmo, theme.scss]
+    theme: [sandstone, theme.scss]
     toc: true
+    toc-depth: 3
+    toc-location: right
+    toc-title: "Contents"
     code-fold: true
-    code-summary: "Show the code"
+    code-copy: true
+    code-overflow: wrap
+    code-tools: true
+    code-summary: "Display code"
+    df-print: kable
+    fig-align: center
+    fig-height: 6
+    fig-width: 10
+    highlight-style: arrow
+    lightbox: true
+    linkcolor: "#0166CC"
+    number-sections: false
+    page-layout: full
+    smooth-scroll: true
+    html-math-method: mathjax
 
 execute:
   echo: true
   freeze: auto
   warning: false
   message: false
+
+knitr:
+  opts_chunk:
+    comment: "#>"
