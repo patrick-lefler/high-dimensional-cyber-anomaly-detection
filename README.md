@@ -5,6 +5,7 @@ Markov transition matrices, PageRank, a shallow autoencoder, and Extreme Value T
 **Author:** Patrick Lefler
 **Published:** 2026-08-12 · **Revised:** 2026-11-18
 **Site:** https://patrick-lefler.com/high-dimensional-cyber-anomaly-detection
+**Repository:** https://github.com/patrick-lefler/high-dimensional-cyber-anomaly-detection
 
 ## What this project does
 
@@ -36,25 +37,30 @@ All results come from simulated data with injected attacks. They show how the me
 
 | Page | Contents |
 |---|---|
-| Overview (`index.qmd`) | Abstract, headline results, recommendations, limitations, reproducibility |
+| Overview (`index.qmd`) | Introduction, headline results, recommendations, limitations, reproducibility |
 | Dependency Graph (`dependency-graph.qmd`) | Transition matrix, PageRank, articulation points, removal impact, criticality tiers |
 | Detector (`detector.qmd`) | Telemetry simulator, attack scenarios, autoencoder, gradient check, architecture sensitivity |
 | Thresholds (`thresholds.qmd`) | GPD fit, block-bootstrap intervals, diagnostics, calibration, declustering |
 | Evaluation (`evaluation.qmd`) | Scorecard, baselines, 30-seed robustness, base rates, attribution, containment routing, drift |
+| Reproducibility (`reproducibility.qmd`) | Quick start, pipeline, result fingerprints, seeds, test results, caching, licenses, software environment |
 
 ## Reproducing the results
 
 ```bash
-Rscript run_all.R                                    # regenerates results/*.rds (under a minute)
+git clone https://github.com/patrick-lefler/high-dimensional-cyber-anomaly-detection.git
+cd high-dimensional-cyber-anomaly-detection
+Rscript -e 'renv::restore()'                         # install pinned package versions
+Rscript run_all.R                                    # regenerate results/*.rds (under a minute)
 Rscript -e 'testthat::test_dir("tests/testthat")'    # unit tests
-rm -rf _freeze && quarto render                      # renders the site into docs/
+rm -rf _freeze && quarto render                      # render the site into docs/
 ```
 
-`results/` is not committed, so run `run_all.R` before the first render. Every simulation parameter and seed is in `params.yaml`, labelled as an assumption. Package versions are not pinned with `renv`. The session information on the Overview page records what produced the published results.
+`results/` is not committed, so run `run_all.R` before the first render. Every simulation parameter and seed is in `params.yaml`, labelled as an assumption. The site's Reproducibility page lists fingerprints of the key results, so you can confirm that a rerun matches exactly.
 
 ## Repository structure
 
 ```
+├── renv.lock            # pinned package versions (renv::restore())
 ├── params.yaml          # all simulation, model, EVT and policy parameters
 ├── run_all.R            # one-command pipeline: writes results/*.rds
 ├── R/

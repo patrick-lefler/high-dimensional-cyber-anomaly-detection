@@ -3,7 +3,6 @@ title: "Cyber Anomaly Detection & Service Dependency Risk"
 subtitle: "Markov transition matrices, PageRank, a shallow autoencoder, and Extreme Value Theory thresholds: a simulation study"
 author: Patrick Lefler
 date: "2026-08-13"
-date-modified: "2026-11-18"
 ---
 
 ```{r}
@@ -16,9 +15,11 @@ fa999 <- rob_get("False alarms at 99.9%")
 f3 <- \(x) f_num(x, 3)
 ```
 
-## Abstract
+## Introduction
 
-Signature rules and fixed thresholds miss attacks that stay inside normal ranges. This project tests a two-layer alternative, built in R, on **simulated** enterprise telemetry.
+Enterprise systems produce large volumes of authentication, network and host telemetry. Most monitoring still relies on fixed signatures and static thresholds, which miss attacks that stay inside normal ranges. Credential stuffing spread across many sources and slow data exfiltration are examples. An unsupervised detector learns what normal looks like and flags departures from it, so it can in principle catch attacks nobody has written a rule for.
+
+Detection alone is not enough. The usual response to an alert is containment: isolate a host, revoke a token. If the affected service sits under much of the estate, the containment can cause a larger outage than the attack. This project therefore tests a two-layer design, built in R, on **simulated** enterprise telemetry. Together the layers answer two questions: *is this window abnormal?* and *how dangerous is it to act on that automatically?*
 
 **The structural layer** models `r nrow(gt_tab)` services as a Markov transition matrix of call flows. It ranks them by PageRank, articulation points and a node-removal simulation, and turns the ranking into criticality tiers that decide which alerts may trigger automated containment.
 
@@ -34,17 +35,9 @@ Signature rules and fixed thresholds miss attacks that stay inside normal ranges
 
 The two-layer design is sound. The detector, as built, is not ready for automated response.
 
-These results come from simulated data and injected attacks, not production telemetry. They show how the method behaves, not how it would perform in a real enterprise.
-
-## Introduction
-
-Enterprise systems produce large volumes of authentication, network and host telemetry. Most monitoring still relies on fixed signatures and static thresholds, which miss attacks that stay inside normal ranges. Credential stuffing spread across many sources and slow data exfiltration are examples. An unsupervised detector learns what normal looks like and flags departures from it, so it can in principle catch attacks nobody has written a rule for.
-
-Detection alone is not enough. The usual response to an alert is containment: isolate a host, revoke a token. If the affected service sits under much of the estate, the containment can cause a larger outage than the attack. This project therefore pairs the detector with a structural model of service dependencies. Together they answer two questions: *is this window abnormal?* and *how dangerous is it to act on that automatically?*
-
 ::: {.callout-warning}
 ## Read this first
-Every number on this site comes from a simulation with assumed parameters (`params.yaml`). The results show how the methods behave under controlled conditions. They do not estimate how the system would perform on any real network.
+Every number on this site comes from a simulation with assumed parameters (`params.yaml`) and injected attacks, not production telemetry. The results show how the methods behave under controlled conditions. They do not estimate how the system would perform on any real network.
 :::
 
 ## Techniques
@@ -135,32 +128,6 @@ What would change the conclusions:
 - **Dependency graph.** The graph, call volumes and tier cut-offs are illustrative. The first-order Markov assumption is stated, not tested. Service-mesh call logs and session traces would replace them.
 - **Prevalence.** The test set is about `r f_pct(n_attack_test / (n_attack_test + n_normal_test), 0)` attacks. Real environments are orders of magnitude lower, which is why the base-rate table matters more than the ROC curve.
 
-## What changed from the original version
-
-An independent review found that the original single-page report:
-
-- advertised a Markov/PageRank layer it never built;
-- simulated independent features (so the 0.75 loss plateau was a mathematical floor, not learning);
-- used attacks pushed far outside normal ranges;
-- reported single-seed results with no uncertainty.
-
-This version builds the dependency layer and adds correlated, seasonal data with three attack intensities. The detector is compared against baselines over `r n_seeds` seeds. The EVT threshold is fitted on held-out hosts, with diagnostics and calibration tests. The headline results changed accordingly.
-
 ## Reproducibility
 
-1. Install packages with `pak` (see the session information below). Package versions are not pinned with `renv`, so the session information below is the record of what produced these results.
-2. Run `Rscript run_all.R` from the project root. It regenerates every result in `results/` in under a minute.
-3. Run `Rscript -e 'testthat::test_dir("tests/testthat")'` for the unit tests: GPD threshold including $\xi = 0$, gradient check, transition matrix and PageRank, removal impact, drift metrics, AUC, and the simulator.
-4. Run `quarto render`. Pages read the cached results. Because `freeze: auto` is on, delete `_freeze/` after re-running `run_all.R` so every page re-executes.
-
-All parameters and seeds are in `params.yaml`: main seed `r cfg$seeds$main`, robustness seeds 1–`r cfg$seeds$robustness`, graph seed `r cfg$graph$seed`. Each seeded run is deterministic and does not depend on the number of parallel workers.
-
-::: {.callout-note collapse="true" icon="false"}
-## Session information
-
-```{r}
-#| label: session-info
-#| echo: false
-sessioninfo::session_info()
-```
-:::
+Every result can be regenerated from `params.yaml` with one script, `run_all.R`, and package versions are pinned with `renv`. The [Reproducibility](reproducibility.qmd) page has step-by-step instructions, result fingerprints for checking a rerun, unit-test results, and the full software environment. The code is on [GitHub](https://github.com/patrick-lefler/high-dimensional-cyber-anomaly-detection).

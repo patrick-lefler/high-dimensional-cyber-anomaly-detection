@@ -7,6 +7,7 @@ project:
     - detector.qmd
     - thresholds.qmd
     - evaluation.qmd
+    - reproducibility.qmd
     - license.qmd
 
 website:
@@ -26,6 +27,8 @@ website:
         text: Thresholds
       - href: evaluation.qmd
         text: Evaluation
+      - href: reproducibility.qmd
+        text: Reproducibility
   page-footer:
     center: "© 2026 Patrick Lefler ⦁ [MIT License](license.qmd) ⦁ Built with R & Quarto"
 
