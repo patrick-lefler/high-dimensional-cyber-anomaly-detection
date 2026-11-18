@@ -1,0 +1,6 @@
+---
+title: "MIT License"
+toc: false
+---
+
+{{< include LICENSE >}}

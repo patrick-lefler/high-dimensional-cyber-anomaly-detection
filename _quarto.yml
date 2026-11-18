@@ -1,5 +1,32 @@
 project:
-  title: "rQuarto_zero-day_cyber_threat_detection_via_deep_autoencoders"
+  type: website
+  output-dir: docs
+  render:
+    - index.qmd
+    - license.qmd
 
-editor: visual
+website:
+  title: "Three Questions for Any Risk Model"
+  search: false
+  page-navigation: true
+  sidebar:
+    style: floating
+    contents:
+      - href: index.qmd
+        text: Overview
+  page-footer:
+    center: "© 2026 Patrick Lefler ⦁ [MIT License](license.qmd) ⦁ Built with R & Quarto"
+    
+  
+format:
+  html:
+    theme: [cosmo, theme.scss]
+    toc: true
+    code-fold: true
+    code-summary: "Show the code"
 
+execute:
+  echo: true
+  freeze: auto
+  warning: false
+  message: false
