@@ -201,13 +201,19 @@ window.Quarto = {
    
   <ul>
   <li><a href="#quick-start" id="toc-quick-start" class="nav-link active" data-scroll-target="#quick-start">Quick start</a></li>
+  <li><a href="#environment" id="toc-environment" class="nav-link" data-scroll-target="#environment">Environment</a></li>
   <li><a href="#pipeline" id="toc-pipeline" class="nav-link" data-scroll-target="#pipeline">Pipeline</a></li>
-  <li><a href="#data" id="toc-data" class="nav-link" data-scroll-target="#data">Data and result fingerprints</a></li>
+  <li><a href="#data" id="toc-data" class="nav-link" data-scroll-target="#data">Data</a></li>
   <li><a href="#parameters" id="toc-parameters" class="nav-link" data-scroll-target="#parameters">Parameters and seeds</a></li>
   <li><a href="#tests" id="toc-tests" class="nav-link" data-scroll-target="#tests">Tests</a></li>
   <li><a href="#caching" id="toc-caching" class="nav-link" data-scroll-target="#caching">Caching</a></li>
+  <li><a href="#limitations" id="toc-limitations" class="nav-link" data-scroll-target="#limitations">Known limitations</a>
+  <ul class="collapse">
+  <li><a href="#repro-limits" id="toc-repro-limits" class="nav-link" data-scroll-target="#repro-limits">Limits of reproducibility</a></li>
+  <li><a href="#sec-limitations" id="toc-sec-limitations" class="nav-link" data-scroll-target="#sec-limitations">Model limitations</a></li>
+  </ul></li>
   <li><a href="#licenses" id="toc-licenses" class="nav-link" data-scroll-target="#licenses">Licenses</a></li>
-  <li><a href="#environment" id="toc-environment" class="nav-link" data-scroll-target="#environment">Software environment</a></li>
+  <li><a href="#session-info" id="toc-session-info" class="nav-link" data-scroll-target="#session-info">Session information</a></li>
   </ul>
 </nav>
     </div>
@@ -217,7 +223,7 @@ window.Quarto = {
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
 <div class="quarto-title-block"><div><h1 class="title">Reproducibility</h1><button type="button" class="btn code-tools-button dropdown-toggle" id="quarto-code-tools-menu" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi"></i> Code</button><ul class="dropdown-menu dropdown-menu-end" aria-labelelledby="quarto-code-tools-menu"><li><a id="quarto-show-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Show All Code</a></li><li><a id="quarto-hide-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Hide All Code</a></li><li><hr class="dropdown-divider"></li><li><a id="quarto-view-source" class="dropdown-item" href="javascript:void(0)" role="button">View Source</a></li></ul></div></div>
-<p class="subtitle lead">Cyber Anomaly Detection &amp; Dependency Risk: how to rerun the analysis and check you got the same results</p>
+<p class="subtitle lead">Cyber Anomaly Detection &amp; Dependency Risk: how to rerun the analysis and where the results can mislead</p>
 </div>
 
 
@@ -234,20 +240,536 @@ window.Quarto = {
 </header>
 
 
-<p>Every number on this site comes from a simulation defined in one parameter file, <code>params.yaml</code>, and run with explicit random seeds. Nothing is downloaded, and no external data are used. A single script, <code>run_all.R</code>, regenerates every result, and the pages only read and display those results. Package versions are pinned with <code>renv</code>. Rerunning the same commit with the restored packages should give identical numbers. The <a href="#data">fingerprints</a> below let you check that.</p>
+<p>Every number on this site comes from a simulation defined in one parameter file, <code>params.yaml</code>, and run with explicit random seeds. Nothing is downloaded, and no external data are used. A single script, <code>run_all.R</code>, regenerates every result, and the pages only read and display those results. Package versions are pinned with <code>renv</code>. Rerunning the same commit with the restored packages should give identical numbers. The <a href="#data">fingerprints</a> below let you check that. This page explains how to rebuild the site, records the environment it was built in, and states where the results can mislead.</p>
 <section id="quick-start" class="level2">
 <h2 class="anchored" data-anchor-id="quick-start">Quick start</h2>
-<ol type="1">
-<li><p>Clone the repository and open the project folder in RStudio or Positron:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/patrick-lefler/high-dimensional-cyber-anomaly-detection.git</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
-<li><p>Restore the pinned packages (see <a href="#environment">Software environment</a>):</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>renv<span class="sc">::</span><span class="fu">restore</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
-<li><p>Regenerate the results (under a minute on a laptop), run the tests, and render the site from the project root:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">Rscript</span> run_all.R</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'testthat::test_dir("tests/testthat")'</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-rf</span> _freeze <span class="kw">&amp;&amp;</span> <span class="ex">quarto</span> render</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
-</ol>
-<p>The rendered site is written to <code>docs/</code>. The <code>results/</code> folder is not committed, so step 3 must run <code>run_all.R</code> before the first render. A page rendered without it stops with the message “Results missing: run <code>Rscript run_all.R</code> first.”</p>
+<p>The code is in the GitHub repository <a href="https://github.com/patrick-lefler/high-dimensional-cyber-anomaly-detection">patrick-lefler/high-dimensional-cyber-anomaly-detection</a>. To rebuild everything from a clean copy, run these commands from a terminal:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/patrick-lefler/high-dimensional-cyber-anomaly-detection</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> high-dimensional-cyber-anomaly-detection</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'renv::restore()'</span>                         <span class="co"># once: install the package versions pinned in renv.lock</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">Rscript</span> run_all.R                                    <span class="co"># regenerate results/ (under a minute on a laptop)</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'testthat::test_dir("tests/testthat")'</span>    <span class="co"># optional: run the unit tests</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-rf</span> _freeze <span class="kw">&amp;&amp;</span> <span class="ex">quarto</span> render                      <span class="co"># render the site</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The rendered site is written to <code>docs/</code>. The <code>results/</code> folder is not committed, so <code>run_all.R</code> must run before the first render. A page rendered without it stops with the message “Results missing: run <code>Rscript run_all.R</code> first.” Deleting <code>_freeze/</code> makes Quarto re-execute every page against the new results (see <a href="#caching">Caching</a>).</p>
+</section>
+<section id="environment" class="level2">
+<h2 class="anchored" data-anchor-id="environment">Environment</h2>
+<div class="cell">
+<div id="tbl-env" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl quarto-uncaptioned" id="tbl-env-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;1
+</figcaption>
+<div aria-describedby="tbl-env-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<div id="pozvafdkwr" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#pozvafdkwr table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#pozvafdkwr thead, #pozvafdkwr tbody, #pozvafdkwr tfoot, #pozvafdkwr tr, #pozvafdkwr td, #pozvafdkwr th {
+  border-style: none;
+}
+
+#pozvafdkwr p {
+  margin: 0;
+  padding: 0;
+}
+
+#pozvafdkwr .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 12px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#pozvafdkwr .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#pozvafdkwr .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#pozvafdkwr .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#pozvafdkwr .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#pozvafdkwr .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#pozvafdkwr .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#pozvafdkwr .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#pozvafdkwr .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#pozvafdkwr .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#pozvafdkwr .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#pozvafdkwr .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#pozvafdkwr .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#pozvafdkwr .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#pozvafdkwr .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#pozvafdkwr .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#pozvafdkwr .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#pozvafdkwr .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#pozvafdkwr .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#pozvafdkwr .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#pozvafdkwr .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#pozvafdkwr .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#pozvafdkwr .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#pozvafdkwr .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#pozvafdkwr .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#pozvafdkwr .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#pozvafdkwr .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#pozvafdkwr .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#pozvafdkwr .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#pozvafdkwr .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#pozvafdkwr .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#pozvafdkwr .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#pozvafdkwr .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#pozvafdkwr .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#pozvafdkwr .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#pozvafdkwr .gt_left {
+  text-align: left;
+}
+
+#pozvafdkwr .gt_center {
+  text-align: center;
+}
+
+#pozvafdkwr .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#pozvafdkwr .gt_font_normal {
+  font-weight: normal;
+}
+
+#pozvafdkwr .gt_font_bold {
+  font-weight: bold;
+}
+
+#pozvafdkwr .gt_font_italic {
+  font-style: italic;
+}
+
+#pozvafdkwr .gt_super {
+  font-size: 65%;
+}
+
+#pozvafdkwr .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#pozvafdkwr .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#pozvafdkwr .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#pozvafdkwr .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#pozvafdkwr .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#pozvafdkwr .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#pozvafdkwr .gt_indent_5 {
+  text-indent: 25px;
+}
+
+#pozvafdkwr .katex-display {
+  display: inline-flex !important;
+  margin-bottom: 0.75em !important;
+}
+
+#pozvafdkwr div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+  height: 0px !important;
+}
+</style>
+
+<table class="gt_table do-not-create-environment caption-top table table-sm table-striped small" data-quarto-bootstrap="false">
+<thead>
+<tr class="gt_heading header">
+<td colspan="2" class="gt_heading gt_title gt_font_normal gt_bottom_border"><strong>Software used to build this page</strong></td>
+</tr>
+<tr class="gt_col_headings even">
+<th id="Item" class="gt_col_heading gt_columns_bottom_border gt_left" data-quarto-table-cell-role="th" scope="col">Item</th>
+<th id="Value" class="gt_col_heading gt_columns_bottom_border gt_left" data-quarto-table-cell-role="th" scope="col">Value</th>
+</tr>
+</thead>
+<tbody class="gt_table_body">
+<tr class="odd">
+<td class="gt_row gt_left" headers="Item">R</td>
+<td class="gt_row gt_left" headers="Value">R version 4.5.2 (2025-10-31)</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="Item">Platform</td>
+<td class="gt_row gt_left" headers="Value">aarch64-apple-darwin20</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left" headers="Item">Quarto</td>
+<td class="gt_row gt_left" headers="Value">1.8.26</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="Item">Packages</td>
+<td class="gt_row gt_left" headers="Value">In sync with renv.lock</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left" headers="Item">recipes</td>
+<td class="gt_row gt_left" headers="Value">1.3.1</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="Item">evd</td>
+<td class="gt_row gt_left" headers="Value">2.3.7.1</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left" headers="Item">isotree</td>
+<td class="gt_row gt_left" headers="Value">0.6.1.5</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="Item">igraph</td>
+<td class="gt_row gt_left" headers="Value">2.2.1</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left" headers="Item">yardstick</td>
+<td class="gt_row gt_left" headers="Value">1.3.2</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</figure>
+</div>
+</div>
+<p><strong>How to read the table.</strong> Each row is one piece of software this page was built with and its version. The “Packages” row says whether the installed R packages match the versions pinned in <code>renv.lock</code>. The last five rows are the packages the results depend on most: <code>recipes</code> (preprocessing), <code>evd</code> (generalized Pareto fits for the thresholds), <code>isotree</code> (Isolation Forest baseline), <code>igraph</code> (service graph) and <code>yardstick</code> (evaluation metrics).</p>
+<p><strong>What the table tells you.</strong> If your versions match these and the packages are in sync, rebuilding the project should give the same numbers. If they differ, small differences in the results may come from the software rather than the analysis.</p>
 </section>
 <section id="pipeline" class="level2">
 <h2 class="anchored" data-anchor-id="pipeline">Pipeline</h2>
@@ -315,64 +837,66 @@ window.Quarto = {
 <td style="text-align: left;">Sourced by every page: loads packages, project functions and cached results; sets theme, palettes and number formats</td>
 <td style="text-align: left;">Shared page objects</td>
 </tr>
+<tr class="odd">
+<td style="text-align: left;"><code>R/repro_env.R</code></td>
+<td style="text-align: left;">Builds the environment table on this page</td>
+<td style="text-align: left;"><code>repro_env_table()</code></td>
+</tr>
 </tbody>
 </table>
 <p><strong>How to read the table.</strong> Each row is one file in the repository, listed in the order the analysis uses them. The middle column says what the file does in plain terms. The last column names the main functions or files it produces, so you can find where any number on the site was computed. Files in <code>R/</code> only define functions. <code>run_all.R</code> calls them, and the pages read what it saves.</p>
 <p><strong>What the table tells you.</strong> The analysis has one entry point and one place for assumptions. Changing a parameter means editing <code>params.yaml</code>, rerunning <code>run_all.R</code> and re-rendering; no page computes anything that the script did not. Every page sources the same setup file, so all five analysis pages work from identical objects and cannot disagree with each other. The functions are small and individually tested, which makes each step straightforward to check or replace.</p>
 </section>
 <section id="data" class="level2">
-<h2 class="anchored" data-anchor-id="data">Data and result fingerprints</h2>
-<p>There are no input data files. All telemetry, attacks and the service graph are generated by <code>R/sim.R</code> and <code>R/graph.R</code> from the values in <code>params.yaml</code>. To replace the simulation with real data, see the <a href="./index.html#limitations">Limitations</a> on the Overview page.</p>
+<h2 class="anchored" data-anchor-id="data">Data</h2>
+<p>There are no input data files. All telemetry, attacks and the service graph are generated by <code>R/sim.R</code> and <code>R/graph.R</code> from the values in <code>params.yaml</code>. To replace the simulation with real data, see <a href="#sec-limitations">Model limitations</a> below.</p>
 <p>Because the inputs are code and parameters, the useful check is on the outputs. The table fingerprints the parameter file and the key numeric results. File-level checksums of <code>results/main.rds</code> and <code>results/graph.rds</code> are not used: those files store a fitted recipe and an igraph object that carry session-specific environments and IDs, so their bytes change from run to run even when every number is identical.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Display code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>fingerprints <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">Item =</span> <span class="fu">c</span>(</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"params.yaml (file)"</span>, <span class="st">"Test-set reconstruction losses"</span>, <span class="st">"EVT thresholds"</span>,</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Main-run summary metrics"</span>, <span class="st">"Service criticality table"</span>, <span class="st">"30-seed robustness results"</span>,</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Bootstrap threshold draws"</span>, <span class="st">"Drift metrics"</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  ),</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">Method =</span> <span class="fu">c</span>(<span class="st">"MD5 of file"</span>, <span class="fu">rep</span>(<span class="st">"rlang::hash() of object"</span>, <span class="dv">7</span>)),</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">Fingerprint =</span> <span class="fu">c</span>(</span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">unname</span>(tools<span class="sc">::</span><span class="fu">md5sum</span>(<span class="st">"params.yaml"</span>)),</span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    rlang<span class="sc">::</span><span class="fu">hash</span>(main<span class="sc">$</span>test<span class="sc">$</span>recon_loss), rlang<span class="sc">::</span><span class="fu">hash</span>(main<span class="sc">$</span>taus), rlang<span class="sc">::</span><span class="fu">hash</span>(main<span class="sc">$</span>summary),</span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    rlang<span class="sc">::</span><span class="fu">hash</span>(graph<span class="sc">$</span>table), rlang<span class="sc">::</span><span class="fu">hash</span>(robust), rlang<span class="sc">::</span><span class="fu">hash</span>(analysis<span class="sc">$</span>boot), rlang<span class="sc">::</span><span class="fu">hash</span>(analysis<span class="sc">$</span>drift)</span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>fingerprints <span class="sc">|&gt;</span></span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gt</span>() <span class="sc">|&gt;</span></span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_header</span>(</span>
-<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="fu">md</span>(<span class="st">"**Fingerprints of the inputs and results used in this render**"</span>),</span>
-<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="fu">paste0</span>(<span class="st">"Rendered "</span>, <span class="fu">Sys.Date</span>())</span>
-<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
-<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cols_align</span>(<span class="at">align =</span> <span class="st">"left"</span>) <span class="sc">|&gt;</span></span>
-<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_options</span>(<span class="at">table.font.size =</span> <span class="dv">12</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>fingerprints <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">Item =</span> <span class="fu">c</span>(</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"params.yaml (file)"</span>, <span class="st">"Test-set reconstruction losses"</span>, <span class="st">"EVT thresholds"</span>,</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Main-run summary metrics"</span>, <span class="st">"Service criticality table"</span>, <span class="st">"30-seed robustness results"</span>,</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Bootstrap threshold draws"</span>, <span class="st">"Drift metrics"</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">Method =</span> <span class="fu">c</span>(<span class="st">"MD5 of file"</span>, <span class="fu">rep</span>(<span class="st">"rlang::hash() of object"</span>, <span class="dv">7</span>)),</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">Fingerprint =</span> <span class="fu">c</span>(</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">unname</span>(tools<span class="sc">::</span><span class="fu">md5sum</span>(<span class="st">"params.yaml"</span>)),</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    rlang<span class="sc">::</span><span class="fu">hash</span>(main<span class="sc">$</span>test<span class="sc">$</span>recon_loss), rlang<span class="sc">::</span><span class="fu">hash</span>(main<span class="sc">$</span>taus), rlang<span class="sc">::</span><span class="fu">hash</span>(main<span class="sc">$</span>summary),</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    rlang<span class="sc">::</span><span class="fu">hash</span>(graph<span class="sc">$</span>table), rlang<span class="sc">::</span><span class="fu">hash</span>(robust), rlang<span class="sc">::</span><span class="fu">hash</span>(analysis<span class="sc">$</span>boot), rlang<span class="sc">::</span><span class="fu">hash</span>(analysis<span class="sc">$</span>drift)</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>fingerprints <span class="sc">|&gt;</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gt</span>() <span class="sc">|&gt;</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_header</span>(<span class="at">title =</span> <span class="fu">md</span>(<span class="st">"**Fingerprints of the inputs and results used in this render**"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cols_align</span>(<span class="at">align =</span> <span class="st">"left"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_options</span>(<span class="at">table.font.size =</span> <span class="dv">12</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div id="tbl-fingerprints" class="cell quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl quarto-uncaptioned" id="tbl-fingerprints-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Table&nbsp;1
+Table&nbsp;2
 </figcaption>
 <div aria-describedby="tbl-fingerprints-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="cell-output-display">
-<div id="tyedaymeke" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
-<style>#tyedaymeke table {
+<div id="wdlfvasazu" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#wdlfvasazu table {
   font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-#tyedaymeke thead, #tyedaymeke tbody, #tyedaymeke tfoot, #tyedaymeke tr, #tyedaymeke td, #tyedaymeke th {
+#wdlfvasazu thead, #wdlfvasazu tbody, #wdlfvasazu tfoot, #wdlfvasazu tr, #wdlfvasazu td, #wdlfvasazu th {
   border-style: none;
 }
 
-#tyedaymeke p {
+#wdlfvasazu p {
   margin: 0;
   padding: 0;
 }
 
-#tyedaymeke .gt_table {
+#wdlfvasazu .gt_table {
   display: table;
   border-collapse: collapse;
   line-height: normal;
@@ -398,12 +922,12 @@ Table&nbsp;1
   border-left-color: #D3D3D3;
 }
 
-#tyedaymeke .gt_caption {
+#wdlfvasazu .gt_caption {
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-#tyedaymeke .gt_title {
+#wdlfvasazu .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -415,7 +939,7 @@ Table&nbsp;1
   border-bottom-width: 0;
 }
 
-#tyedaymeke .gt_subtitle {
+#wdlfvasazu .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -427,7 +951,7 @@ Table&nbsp;1
   border-top-width: 0;
 }
 
-#tyedaymeke .gt_heading {
+#wdlfvasazu .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -439,13 +963,13 @@ Table&nbsp;1
   border-right-color: #D3D3D3;
 }
 
-#tyedaymeke .gt_bottom_border {
+#wdlfvasazu .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#tyedaymeke .gt_col_headings {
+#wdlfvasazu .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -460,7 +984,7 @@ Table&nbsp;1
   border-right-color: #D3D3D3;
 }
 
-#tyedaymeke .gt_col_heading {
+#wdlfvasazu .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -480,7 +1004,7 @@ Table&nbsp;1
   overflow-x: hidden;
 }
 
-#tyedaymeke .gt_column_spanner_outer {
+#wdlfvasazu .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -492,15 +1016,15 @@ Table&nbsp;1
   padding-right: 4px;
 }
 
-#tyedaymeke .gt_column_spanner_outer:first-child {
+#wdlfvasazu .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#tyedaymeke .gt_column_spanner_outer:last-child {
+#wdlfvasazu .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#tyedaymeke .gt_column_spanner {
+#wdlfvasazu .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -512,11 +1036,11 @@ Table&nbsp;1
   width: 100%;
 }
 
-#tyedaymeke .gt_spanner_row {
+#wdlfvasazu .gt_spanner_row {
   border-bottom-style: hidden;
 }
 
-#tyedaymeke .gt_group_heading {
+#wdlfvasazu .gt_group_heading {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -542,7 +1066,7 @@ Table&nbsp;1
   text-align: left;
 }
 
-#tyedaymeke .gt_empty_group_heading {
+#wdlfvasazu .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -557,15 +1081,15 @@ Table&nbsp;1
   vertical-align: middle;
 }
 
-#tyedaymeke .gt_from_md > :first-child {
+#wdlfvasazu .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#tyedaymeke .gt_from_md > :last-child {
+#wdlfvasazu .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#tyedaymeke .gt_row {
+#wdlfvasazu .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -584,7 +1108,7 @@ Table&nbsp;1
   overflow-x: hidden;
 }
 
-#tyedaymeke .gt_stub {
+#wdlfvasazu .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -597,7 +1121,7 @@ Table&nbsp;1
   padding-right: 5px;
 }
 
-#tyedaymeke .gt_stub_row_group {
+#wdlfvasazu .gt_stub_row_group {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -611,15 +1135,15 @@ Table&nbsp;1
   vertical-align: top;
 }
 
-#tyedaymeke .gt_row_group_first td {
+#wdlfvasazu .gt_row_group_first td {
   border-top-width: 2px;
 }
 
-#tyedaymeke .gt_row_group_first th {
+#wdlfvasazu .gt_row_group_first th {
   border-top-width: 2px;
 }
 
-#tyedaymeke .gt_summary_row {
+#wdlfvasazu .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -629,16 +1153,16 @@ Table&nbsp;1
   padding-right: 5px;
 }
 
-#tyedaymeke .gt_first_summary_row {
+#wdlfvasazu .gt_first_summary_row {
   border-top-style: solid;
   border-top-color: #D3D3D3;
 }
 
-#tyedaymeke .gt_first_summary_row.thick {
+#wdlfvasazu .gt_first_summary_row.thick {
   border-top-width: 2px;
 }
 
-#tyedaymeke .gt_last_summary_row {
+#wdlfvasazu .gt_last_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -648,7 +1172,7 @@ Table&nbsp;1
   border-bottom-color: #D3D3D3;
 }
 
-#tyedaymeke .gt_grand_summary_row {
+#wdlfvasazu .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -658,7 +1182,7 @@ Table&nbsp;1
   padding-right: 5px;
 }
 
-#tyedaymeke .gt_first_grand_summary_row {
+#wdlfvasazu .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -668,7 +1192,7 @@ Table&nbsp;1
   border-top-color: #D3D3D3;
 }
 
-#tyedaymeke .gt_last_grand_summary_row_top {
+#wdlfvasazu .gt_last_grand_summary_row_top {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -678,11 +1202,11 @@ Table&nbsp;1
   border-bottom-color: #D3D3D3;
 }
 
-#tyedaymeke .gt_striped {
+#wdlfvasazu .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#tyedaymeke .gt_table_body {
+#wdlfvasazu .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -691,7 +1215,7 @@ Table&nbsp;1
   border-bottom-color: #D3D3D3;
 }
 
-#tyedaymeke .gt_footnotes {
+#wdlfvasazu .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -705,7 +1229,7 @@ Table&nbsp;1
   border-right-color: #D3D3D3;
 }
 
-#tyedaymeke .gt_footnote {
+#wdlfvasazu .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding-top: 4px;
@@ -714,7 +1238,7 @@ Table&nbsp;1
   padding-right: 5px;
 }
 
-#tyedaymeke .gt_sourcenotes {
+#wdlfvasazu .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -728,7 +1252,7 @@ Table&nbsp;1
   border-right-color: #D3D3D3;
 }
 
-#tyedaymeke .gt_sourcenote {
+#wdlfvasazu .gt_sourcenote {
   font-size: 90%;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -736,72 +1260,72 @@ Table&nbsp;1
   padding-right: 5px;
 }
 
-#tyedaymeke .gt_left {
+#wdlfvasazu .gt_left {
   text-align: left;
 }
 
-#tyedaymeke .gt_center {
+#wdlfvasazu .gt_center {
   text-align: center;
 }
 
-#tyedaymeke .gt_right {
+#wdlfvasazu .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#tyedaymeke .gt_font_normal {
+#wdlfvasazu .gt_font_normal {
   font-weight: normal;
 }
 
-#tyedaymeke .gt_font_bold {
+#wdlfvasazu .gt_font_bold {
   font-weight: bold;
 }
 
-#tyedaymeke .gt_font_italic {
+#wdlfvasazu .gt_font_italic {
   font-style: italic;
 }
 
-#tyedaymeke .gt_super {
+#wdlfvasazu .gt_super {
   font-size: 65%;
 }
 
-#tyedaymeke .gt_footnote_marks {
+#wdlfvasazu .gt_footnote_marks {
   font-size: 75%;
   vertical-align: 0.4em;
   position: initial;
 }
 
-#tyedaymeke .gt_asterisk {
+#wdlfvasazu .gt_asterisk {
   font-size: 100%;
   vertical-align: 0;
 }
 
-#tyedaymeke .gt_indent_1 {
+#wdlfvasazu .gt_indent_1 {
   text-indent: 5px;
 }
 
-#tyedaymeke .gt_indent_2 {
+#wdlfvasazu .gt_indent_2 {
   text-indent: 10px;
 }
 
-#tyedaymeke .gt_indent_3 {
+#wdlfvasazu .gt_indent_3 {
   text-indent: 15px;
 }
 
-#tyedaymeke .gt_indent_4 {
+#wdlfvasazu .gt_indent_4 {
   text-indent: 20px;
 }
 
-#tyedaymeke .gt_indent_5 {
+#wdlfvasazu .gt_indent_5 {
   text-indent: 25px;
 }
 
-#tyedaymeke .katex-display {
+#wdlfvasazu .katex-display {
   display: inline-flex !important;
   margin-bottom: 0.75em !important;
 }
 
-#tyedaymeke div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+#wdlfvasazu div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
   height: 0px !important;
 }
 </style>
@@ -809,12 +1333,9 @@ Table&nbsp;1
 <table class="gt_table do-not-create-environment caption-top table table-sm table-striped small" data-quarto-bootstrap="false">
 <thead>
 <tr class="gt_heading header">
-<td colspan="3" class="gt_heading gt_title gt_font_normal"><strong>Fingerprints of the inputs and results used in this render</strong></td>
+<td colspan="3" class="gt_heading gt_title gt_font_normal gt_bottom_border"><strong>Fingerprints of the inputs and results used in this render</strong></td>
 </tr>
-<tr class="gt_heading even">
-<td colspan="3" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border">Rendered 2026-11-18</td>
-</tr>
-<tr class="gt_col_headings header">
+<tr class="gt_col_headings even">
 <th id="Item" class="gt_col_heading gt_columns_bottom_border gt_left" data-quarto-table-cell-role="th" scope="col">Item</th>
 <th id="Method" class="gt_col_heading gt_columns_bottom_border gt_left" data-quarto-table-cell-role="th" scope="col">Method</th>
 <th id="Fingerprint" class="gt_col_heading gt_columns_bottom_border gt_left" data-quarto-table-cell-role="th" scope="col">Fingerprint</th>
@@ -870,7 +1391,7 @@ Table&nbsp;1
 </figure>
 </div>
 </div>
-<p><strong>How to read the table.</strong> Each row is one input or result. The fingerprint is a short code computed from its exact contents. For the parameter file it is a standard MD5 checksum of the file. For results it is a hash of the numbers themselves, computed in R with <code>rlang::hash()</code>. Changing even one value produces a completely different code. The subtitle gives the date this page was rendered.</p>
+<p><strong>How to read the table.</strong> Each row is one input or result. The fingerprint is a short code computed from its exact contents. For the parameter file it is a standard MD5 checksum of the file. For results it is a hash of the numbers themselves, computed in R with <code>rlang::hash()</code>. Changing even one value produces a completely different code.</p>
 <p><strong>What the table tells you.</strong> Anyone who reruns <code>run_all.R</code> with the restored packages can compute the same fingerprints. If they all match, the rerun reproduced this site’s numbers exactly. We checked this by running the pipeline repeatedly, including the parallel 30-seed study, and every fingerprint matched. A mismatch on <code>params.yaml</code> means the assumptions changed. A mismatch on results with the same parameters points to a different package version.</p>
 </section>
 <section id="parameters" class="level2">
@@ -883,6 +1404,115 @@ Table&nbsp;1
 <li><strong>Secondary analyses</strong> in <code>run_all.R</code> (gradient check, architecture sweep, bootstrap, drift demo, routing) use fixed offsets from the main seed.</li>
 </ul>
 <p><code>run_pipeline()</code> calls <code>set.seed()</code> with its own seed at the start, so each run draws the same random numbers whether the 30-seed study runs on one core or many. The page also re-derives the heatmap sample from the main seed, so the “random” incidents shown are the same in every render.</p>
+<div class="callout callout-style-default callout-note no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>params.yaml
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Every value below is a modelling assumption for the synthetic study, not an</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"># estimate from real telemetry. Ranges are [min, max] of a uniform draw.</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">seeds</span><span class="kw">:</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">main</span><span class="kw">:</span><span class="at"> </span><span class="dv">42</span><span class="co">                 # seed for the main run shown in the plots</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">robustness</span><span class="kw">:</span><span class="at"> </span><span class="dv">30</span><span class="co">           # seeds 1..30 for the multi-seed robustness study</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="fu">simulation</span><span class="kw">:</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">start_date</span><span class="kw">:</span><span class="at"> </span><span class="st">"2026-01-05"</span><span class="co"> # a Monday, so day 1 is a weekday</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">window_minutes</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span><span class="co">        # one row = one host x 5-minute window</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">n_days</span><span class="kw">:</span><span class="at"> </span><span class="dv">14</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">hosts_train</span><span class="kw">:</span><span class="at"> </span><span class="dv">4</span><span class="co">           # 4 x 14 days x 288 windows = 16,128 rows</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">hosts_val</span><span class="kw">:</span><span class="at"> </span><span class="dv">4</span><span class="co">             # held-out normal windows for threshold fitting</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">hosts_test</span><span class="kw">:</span><span class="at"> </span><span class="dv">2</span><span class="co">            # clean normal windows in the test set</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">hosts_attack_pool</span><span class="kw">:</span><span class="at"> </span><span class="dv">4</span><span class="co">     # normal windows that attacks are injected into</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">ar_phi</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.5</span><span class="co">              # AR(1) persistence of every latent factor</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">diurnal_amplitude</span><span class="kw">:</span><span class="at"> </span><span class="fl">2.5</span><span class="co">   # size of the business-hours bump in activity</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">diurnal_peak_hour</span><span class="kw">:</span><span class="at"> </span><span class="dv">13</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">diurnal_width_hours</span><span class="kw">:</span><span class="at"> </span><span class="dv">3</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">weekend_activity</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.3</span><span class="co">    # weekend bump as a share of a weekday bump</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">n_attacks_per_cell</span><span class="kw">:</span><span class="at"> </span><span class="dv">150</span><span class="co">  # per attack type x intensity tier</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a><span class="fu">attacks</span><span class="kw">:</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_exfiltration</span><span class="kw">:</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">label</span><span class="kw">:</span><span class="at"> </span><span class="st">"Data Exfiltration"</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">low</span><span class="kw">:</span><span class="at">    </span><span class="kw">{</span><span class="fu">bytes_mult</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="fl">1.5</span><span class="kw">,</span><span class="at"> </span><span class="fl">3.0</span><span class="kw">],</span><span class="at"> </span><span class="fu">tls_mult</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="fl">1.5</span><span class="kw">,</span><span class="at"> </span><span class="fl">3.0</span><span class="kw">],</span><span class="at"> </span><span class="fu">entropy_mult</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="fl">0.7</span><span class="kw">,</span><span class="at"> </span><span class="fl">0.9</span><span class="kw">]}</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">medium</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="fu">bytes_mult</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="dv">5</span><span class="kw">,</span><span class="at"> </span><span class="dv">10</span><span class="kw">],</span><span class="at">    </span><span class="fu">tls_mult</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="dv">5</span><span class="kw">,</span><span class="at"> </span><span class="dv">10</span><span class="kw">],</span><span class="at">    </span><span class="fu">entropy_mult</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="fl">0.7</span><span class="kw">,</span><span class="at"> </span><span class="fl">0.9</span><span class="kw">]}</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">high</span><span class="kw">:</span><span class="at">   </span><span class="kw">{</span><span class="fu">bytes_mult</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="dv">25</span><span class="kw">,</span><span class="at"> </span><span class="dv">60</span><span class="kw">],</span><span class="at">   </span><span class="fu">tls_mult</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="dv">8</span><span class="kw">,</span><span class="at"> </span><span class="dv">20</span><span class="kw">],</span><span class="at">    </span><span class="fu">entropy_mult</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="fl">0.7</span><span class="kw">,</span><span class="at"> </span><span class="fl">0.9</span><span class="kw">]}</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">credential_stuffing</span><span class="kw">:</span></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">label</span><span class="kw">:</span><span class="at"> </span><span class="st">"Credential Stuffing"</span></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">low</span><span class="kw">:</span><span class="at">    </span><span class="kw">{</span><span class="fu">ips_add</span><span class="kw">:</span><span class="at"> </span><span class="dv">4</span><span class="kw">,</span><span class="at">  </span><span class="fu">ips_pois</span><span class="kw">:</span><span class="at"> </span><span class="dv">2</span><span class="kw">,</span><span class="at">  </span><span class="fu">fails_add</span><span class="kw">:</span><span class="at"> </span><span class="dv">1</span><span class="kw">,</span><span class="at"> </span><span class="fu">fails_pois</span><span class="kw">:</span><span class="at"> </span><span class="dv">1</span><span class="kw">}</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">medium</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="fu">ips_add</span><span class="kw">:</span><span class="at"> </span><span class="dv">15</span><span class="kw">,</span><span class="at"> </span><span class="fu">ips_pois</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span><span class="kw">,</span><span class="at">  </span><span class="fu">fails_add</span><span class="kw">:</span><span class="at"> </span><span class="dv">3</span><span class="kw">,</span><span class="at"> </span><span class="fu">fails_pois</span><span class="kw">:</span><span class="at"> </span><span class="dv">2</span><span class="kw">}</span></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">high</span><span class="kw">:</span><span class="at">   </span><span class="kw">{</span><span class="fu">ips_add</span><span class="kw">:</span><span class="at"> </span><span class="dv">0</span><span class="kw">,</span><span class="at">  </span><span class="fu">ips_pois</span><span class="kw">:</span><span class="at"> </span><span class="dv">80</span><span class="kw">,</span><span class="at"> </span><span class="fu">fails_add</span><span class="kw">:</span><span class="at"> </span><span class="dv">0</span><span class="kw">,</span><span class="at"> </span><span class="fu">fails_pois</span><span class="kw">:</span><span class="at"> </span><span class="dv">45</span><span class="kw">}</span></span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">privilege_escalation</span><span class="kw">:</span></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">label</span><span class="kw">:</span><span class="at"> </span><span class="st">"Privilege Escalation"</span></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">low</span><span class="kw">:</span><span class="at">    </span><span class="kw">{</span><span class="fu">priv_add</span><span class="kw">:</span><span class="at"> </span><span class="dv">1</span><span class="kw">}</span></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">medium</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="fu">priv_add</span><span class="kw">:</span><span class="at"> </span><span class="dv">2</span><span class="kw">}</span></span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">high</span><span class="kw">:</span><span class="at">   </span><span class="kw">{</span><span class="fu">priv_add</span><span class="kw">:</span><span class="at"> </span><span class="dv">4</span><span class="kw">}</span></span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">ransomware_staging</span><span class="kw">:</span></span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">label</span><span class="kw">:</span><span class="at"> </span><span class="st">"Ransomware Staging"</span></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">low</span><span class="kw">:</span><span class="at">    </span><span class="kw">{</span><span class="fu">child_add</span><span class="kw">:</span><span class="at"> </span><span class="dv">3</span><span class="kw">,</span><span class="at">  </span><span class="fu">child_pois</span><span class="kw">:</span><span class="at"> </span><span class="dv">2</span><span class="kw">,</span><span class="at">  </span><span class="fu">fs_add</span><span class="kw">:</span><span class="at"> </span><span class="dv">6</span><span class="kw">,</span><span class="at">  </span><span class="fu">fs_pois</span><span class="kw">:</span><span class="at"> </span><span class="dv">3</span><span class="kw">,</span><span class="at">  </span><span class="fu">dns_mult</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="fl">1.2</span><span class="kw">,</span><span class="at"> </span><span class="fl">1.6</span><span class="kw">]}</span></span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">medium</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="fu">child_add</span><span class="kw">:</span><span class="at"> </span><span class="dv">12</span><span class="kw">,</span><span class="at"> </span><span class="fu">child_pois</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span><span class="kw">,</span><span class="at">  </span><span class="fu">fs_add</span><span class="kw">:</span><span class="at"> </span><span class="dv">20</span><span class="kw">,</span><span class="at"> </span><span class="fu">fs_pois</span><span class="kw">:</span><span class="at"> </span><span class="dv">10</span><span class="kw">,</span><span class="at"> </span><span class="fu">dns_mult</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="dv">2</span><span class="kw">,</span><span class="at"> </span><span class="dv">4</span><span class="kw">]}</span></span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">high</span><span class="kw">:</span><span class="at">   </span><span class="kw">{</span><span class="fu">child_add</span><span class="kw">:</span><span class="at"> </span><span class="dv">0</span><span class="kw">,</span><span class="at">  </span><span class="fu">child_pois</span><span class="kw">:</span><span class="at"> </span><span class="dv">35</span><span class="kw">,</span><span class="at"> </span><span class="fu">fs_add</span><span class="kw">:</span><span class="at"> </span><span class="dv">0</span><span class="kw">,</span><span class="at">  </span><span class="fu">fs_pois</span><span class="kw">:</span><span class="at"> </span><span class="dv">60</span><span class="kw">,</span><span class="at"> </span><span class="fu">dns_mult</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="dv">4</span><span class="kw">,</span><span class="at"> </span><span class="dv">10</span><span class="kw">]}</span></span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">lateral_movement</span><span class="kw">:</span></span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">label</span><span class="kw">:</span><span class="at"> </span><span class="st">"Lateral Movement"</span></span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">low</span><span class="kw">:</span><span class="at">    </span><span class="kw">{</span><span class="fu">dest_add</span><span class="kw">:</span><span class="at"> </span><span class="dv">1</span><span class="kw">,</span><span class="at">  </span><span class="fu">dest_pois</span><span class="kw">:</span><span class="at"> </span><span class="dv">1</span><span class="kw">,</span><span class="at"> </span><span class="fu">smb_add</span><span class="kw">:</span><span class="at"> </span><span class="dv">2</span><span class="kw">,</span><span class="at">  </span><span class="fu">smb_pois</span><span class="kw">:</span><span class="at"> </span><span class="dv">1</span><span class="kw">,</span><span class="at">  </span><span class="fu">svc_add</span><span class="kw">:</span><span class="at"> </span><span class="dv">0</span><span class="kw">,</span><span class="at"> </span><span class="fu">svc_prob</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.3</span><span class="kw">}</span></span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">medium</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="fu">dest_add</span><span class="kw">:</span><span class="at"> </span><span class="dv">3</span><span class="kw">,</span><span class="at">  </span><span class="fu">dest_pois</span><span class="kw">:</span><span class="at"> </span><span class="dv">2</span><span class="kw">,</span><span class="at"> </span><span class="fu">smb_add</span><span class="kw">:</span><span class="at"> </span><span class="dv">6</span><span class="kw">,</span><span class="at">  </span><span class="fu">smb_pois</span><span class="kw">:</span><span class="at"> </span><span class="dv">3</span><span class="kw">,</span><span class="at">  </span><span class="fu">svc_add</span><span class="kw">:</span><span class="at"> </span><span class="dv">1</span><span class="kw">,</span><span class="at"> </span><span class="fu">svc_prob</span><span class="kw">:</span><span class="at"> </span><span class="dv">0</span><span class="kw">}</span></span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">high</span><span class="kw">:</span><span class="at">   </span><span class="kw">{</span><span class="fu">dest_add</span><span class="kw">:</span><span class="at"> </span><span class="dv">10</span><span class="kw">,</span><span class="at"> </span><span class="fu">dest_pois</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span><span class="kw">,</span><span class="at"> </span><span class="fu">smb_add</span><span class="kw">:</span><span class="at"> </span><span class="dv">20</span><span class="kw">,</span><span class="at"> </span><span class="fu">smb_pois</span><span class="kw">:</span><span class="at"> </span><span class="dv">10</span><span class="kw">,</span><span class="at"> </span><span class="fu">svc_add</span><span class="kw">:</span><span class="at"> </span><span class="dv">3</span><span class="kw">,</span><span class="at"> </span><span class="fu">svc_prob</span><span class="kw">:</span><span class="at"> </span><span class="dv">0</span><span class="kw">}</span></span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a><span class="fu">low_and_slow</span><span class="kw">:</span></span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">label</span><span class="kw">:</span><span class="at"> </span><span class="st">"Low-and-Slow Exfiltration"</span></span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">n_campaigns</span><span class="kw">:</span><span class="at"> </span><span class="dv">30</span></span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">length</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="dv">12</span><span class="kw">,</span><span class="at"> </span><span class="dv">48</span><span class="kw">]</span><span class="co">          # consecutive 5-minute windows per campaign (1-4 hours)</span></span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">bytes_mult</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="fl">1.5</span><span class="kw">,</span><span class="at"> </span><span class="fl">3.0</span><span class="kw">]</span></span>
+<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">tls_mult</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="fl">1.2</span><span class="kw">,</span><span class="at"> </span><span class="fl">2.0</span><span class="kw">]</span></span>
+<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">entropy_mult</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="fl">0.7</span><span class="kw">,</span><span class="at"> </span><span class="fl">0.9</span><span class="kw">]</span></span>
+<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a><span class="fu">autoencoder</span><span class="kw">:</span></span>
+<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">bottleneck</span><span class="kw">:</span><span class="at"> </span><span class="dv">4</span></span>
+<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">max_epochs</span><span class="kw">:</span><span class="at"> </span><span class="dv">60</span></span>
+<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">patience</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span><span class="co">               # early stopping on validation loss</span></span>
+<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">batch_size</span><span class="kw">:</span><span class="at"> </span><span class="dv">256</span></span>
+<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">lr</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.005</span></span>
+<span id="cb3-64"><a href="#cb3-64" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">sweep_bottleneck</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="dv">2</span><span class="kw">,</span><span class="at"> </span><span class="dv">4</span><span class="kw">,</span><span class="at"> </span><span class="dv">8</span><span class="kw">]</span></span>
+<span id="cb3-65"><a href="#cb3-65" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">deep_hidden</span><span class="kw">:</span><span class="at"> </span><span class="dv">8</span><span class="co">            # second architecture: d-8-4-8-d</span></span>
+<span id="cb3-66"><a href="#cb3-66" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-67"><a href="#cb3-67" aria-hidden="true" tabindex="-1"></a><span class="fu">evt</span><span class="kw">:</span></span>
+<span id="cb3-68"><a href="#cb3-68" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">u_prob</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.95</span><span class="co">              # POT threshold u = 95th percentile of held-out losses</span></span>
+<span id="cb3-69"><a href="#cb3-69" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">q</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="fl">0.99</span><span class="kw">,</span><span class="at"> </span><span class="fl">0.999</span><span class="kw">,</span><span class="at"> </span><span class="fl">0.9999</span><span class="kw">,</span><span class="at"> </span><span class="fl">0.99999</span><span class="kw">]</span></span>
+<span id="cb3-70"><a href="#cb3-70" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">bootstrap_B</span><span class="kw">:</span><span class="at"> </span><span class="dv">1000</span></span>
+<span id="cb3-71"><a href="#cb3-71" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">decluster_run_length</span><span class="kw">:</span><span class="at"> </span><span class="dv">3</span><span class="co">   # runs method: exceedances within 3 windows = one cluster</span></span>
+<span id="cb3-72"><a href="#cb3-72" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">min_empirical_exceedances</span><span class="kw">:</span><span class="at"> </span><span class="dv">10</span></span>
+<span id="cb3-73"><a href="#cb3-73" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-74"><a href="#cb3-74" aria-hidden="true" tabindex="-1"></a><span class="fu">operations</span><span class="kw">:</span></span>
+<span id="cb3-75"><a href="#cb3-75" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">windows_per_day</span><span class="kw">:</span><span class="at"> </span><span class="dv">1000000</span><span class="co">  # assumed scoring volume of a large SOC</span></span>
+<span id="cb3-76"><a href="#cb3-76" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">prevalence</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="fl">1.0e-5</span><span class="kw">,</span><span class="at"> </span><span class="fl">1.0e-4</span><span class="kw">,</span><span class="at"> </span><span class="fl">1.0e-3</span><span class="kw">]</span></span>
+<span id="cb3-77"><a href="#cb3-77" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-78"><a href="#cb3-78" aria-hidden="true" tabindex="-1"></a><span class="fu">graph</span><span class="kw">:</span></span>
+<span id="cb3-79"><a href="#cb3-79" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">damping</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.85</span></span>
+<span id="cb3-80"><a href="#cb3-80" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">damping_sensitivity</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="fl">0.75</span><span class="kw">,</span><span class="at"> </span><span class="fl">0.85</span><span class="kw">,</span><span class="at"> </span><span class="fl">0.95</span><span class="kw">]</span></span>
+<span id="cb3-81"><a href="#cb3-81" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">tol</span><span class="kw">:</span><span class="at"> </span><span class="fl">1.0e-12</span></span>
+<span id="cb3-82"><a href="#cb3-82" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">max_iter</span><span class="kw">:</span><span class="at"> </span><span class="dv">1000</span></span>
+<span id="cb3-83"><a href="#cb3-83" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">tier1_removal_impact</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.5</span><span class="co">    # policy choice: Tier 1 if removal cuts off &gt;= 50% of services</span></span>
+<span id="cb3-84"><a href="#cb3-84" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">seed</span><span class="kw">:</span><span class="at"> </span><span class="dv">7</span></span>
+<span id="cb3-85"><a href="#cb3-85" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-86"><a href="#cb3-86" aria-hidden="true" tabindex="-1"></a><span class="fu">drift</span><span class="kw">:</span></span>
+<span id="cb3-87"><a href="#cb3-87" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">week_hosts</span><span class="kw">:</span><span class="at"> </span><span class="dv">100</span><span class="co">           # 100 hosts x 7 days = production-scale weekly sample</span></span>
+<span id="cb3-88"><a href="#cb3-88" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">week_days</span><span class="kw">:</span><span class="at"> </span><span class="dv">7</span></span>
+<span id="cb3-89"><a href="#cb3-89" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">material_shift_sd</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.3</span></span>
+<span id="cb3-90"><a href="#cb3-90" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">harmless_shift_sd</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.05</span></span>
+<span id="cb3-91"><a href="#cb3-91" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">shifted_features</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">"net_bytes_out_kb"</span><span class="kw">,</span><span class="at"> </span><span class="st">"host_cpu_utilization"</span><span class="kw">]</span></span>
+<span id="cb3-92"><a href="#cb3-92" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">psi_watch</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.1</span></span>
+<span id="cb3-93"><a href="#cb3-93" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">psi_alert</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.2</span></span>
+<span id="cb3-94"><a href="#cb3-94" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">ks_alpha</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.01</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
 </section>
 <section id="tests" class="level2">
 <h2 class="anchored" data-anchor-id="tests">Tests</h2>
@@ -890,27 +1520,27 @@ Table&nbsp;1
 <div class="cell">
 <details class="code-fold">
 <summary>Display code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>test_results <span class="ot">&lt;-</span> testthat<span class="sc">::</span><span class="fu">test_dir</span>(<span class="st">"tests/testthat"</span>, <span class="at">reporter =</span> <span class="st">"silent"</span>, <span class="at">stop_on_failure =</span> <span class="cn">FALSE</span>) <span class="sc">|&gt;</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>()</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>test_results <span class="sc">|&gt;</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transmute</span>(</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">Test =</span> test,</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">Checks =</span> nb,</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">Passed =</span> nb <span class="sc">-</span> failed <span class="sc">-</span> <span class="fu">as.integer</span>(error) <span class="sc">-</span> skipped,</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">Failed =</span> failed <span class="sc">+</span> <span class="fu">as.integer</span>(error),</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">Skipped =</span> <span class="fu">as.integer</span>(skipped)</span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gt</span>() <span class="sc">|&gt;</span></span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_header</span>(</span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="fu">md</span>(<span class="st">"**Unit test results**"</span>),</span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="fu">sprintf</span>(<span class="st">"%d tests, %d checks, run %s"</span>, <span class="fu">nrow</span>(test_results), <span class="fu">sum</span>(test_results<span class="sc">$</span>nb), <span class="fu">Sys.Date</span>())</span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_options</span>(<span class="at">table.font.size =</span> <span class="dv">12</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>test_results <span class="ot">&lt;-</span> testthat<span class="sc">::</span><span class="fu">test_dir</span>(<span class="st">"tests/testthat"</span>, <span class="at">reporter =</span> <span class="st">"silent"</span>, <span class="at">stop_on_failure =</span> <span class="cn">FALSE</span>) <span class="sc">|&gt;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>()</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>test_results <span class="sc">|&gt;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transmute</span>(</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">Test =</span> test,</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">Checks =</span> nb,</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">Passed =</span> nb <span class="sc">-</span> failed <span class="sc">-</span> <span class="fu">as.integer</span>(error) <span class="sc">-</span> skipped,</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">Failed =</span> failed <span class="sc">+</span> <span class="fu">as.integer</span>(error),</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">Skipped =</span> <span class="fu">as.integer</span>(skipped)</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gt</span>() <span class="sc">|&gt;</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_header</span>(</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="fu">md</span>(<span class="st">"**Unit test results**"</span>),</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="fu">sprintf</span>(<span class="st">"%d tests, %d checks"</span>, <span class="fu">nrow</span>(test_results), <span class="fu">sum</span>(test_results<span class="sc">$</span>nb))</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_options</span>(<span class="at">table.font.size =</span> <span class="dv">12</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div id="tbl-tests" class="cell quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl quarto-uncaptioned" id="tbl-tests-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Table&nbsp;2
+Table&nbsp;3
 </figcaption>
 <div aria-describedby="tbl-tests-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="cell-output-display">
@@ -1370,7 +2000,7 @@ Table&nbsp;2
 <td colspan="5" class="gt_heading gt_title gt_font_normal"><strong>Unit test results</strong></td>
 </tr>
 <tr class="gt_heading even">
-<td colspan="5" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border">8 tests, 18 checks, run 2026-11-18</td>
+<td colspan="5" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border">8 tests, 18 checks</td>
 </tr>
 <tr class="gt_col_headings header">
 <th id="Test" class="gt_col_heading gt_columns_bottom_border gt_left" data-quarto-table-cell-role="th" scope="col">Test</th>
@@ -1456,15 +2086,119 @@ Table&nbsp;2
 <li><strong>Quarto freeze (<code>_freeze/</code>).</strong> <code>_quarto.yml</code> sets <code>freeze: auto</code>, so a full <code>quarto render</code> re-executes a page only when that page’s <code>.qmd</code> file changes. Changes to <code>results/</code> or the <code>R/</code> scripts do not count. After rerunning <code>run_all.R</code>, delete <code>_freeze/</code> and render the whole site, or render each page explicitly (for example <code>quarto render evaluation.qmd</code>), because Quarto always executes a page that is rendered on its own.</li>
 </ul>
 </section>
+<section id="limitations" class="level2">
+<h2 class="anchored" data-anchor-id="limitations">Known limitations</h2>
+<section id="repro-limits" class="level3">
+<h3 class="anchored" data-anchor-id="repro-limits">Limits of reproducibility</h3>
+<ul>
+<li>Bit-for-bit equality is expected only on the same platform and package versions. Floating-point and BLAS differences across machines can change low-order digits, and with them the fingerprints in the <a href="#data">Data</a> table, even when every reported figure is unchanged.</li>
+<li><code>renv::restore()</code> installs packages from CRAN. If a pinned version is removed from CRAN or its archive, or cannot be built on a newer R or operating system, the restore fails and the environment has to be rebuilt by hand.</li>
+<li>The fingerprints for results use <code>rlang::hash()</code>, whose output can change between <code>rlang</code> versions. Compare fingerprints only between runs with the same <code>rlang</code> version.</li>
+<li>Quarto versions affect rendering, not the numbers.</li>
+</ul>
+</section>
+<section id="sec-limitations" class="level3">
+<h3 class="anchored" data-anchor-id="sec-limitations">Model limitations</h3>
+<ol type="1">
+<li><strong>Simulated data.</strong> The latent factors, marginals, correlations, seasonality and host roles are all assumptions. Real telemetry has missing data, logging changes, holidays and populations of very different hosts.</li>
+<li><strong>Simulated attacks.</strong> Each attack changes a few features in single windows or short runs. Real campaigns move across hosts and over days.</li>
+<li><strong>Heavy, discrete tail.</strong> Rare count features dominate extreme normal losses, so a single GPD fits poorly and the threshold depends on the chosen level <span class="math inline">\(u\)</span>. Per-host or per-role thresholds, or separate models for count features, may change the picture.</li>
+<li><strong>Fixed threshold.</strong> <span class="math inline">\(\tau_q\)</span> is fitted once. Thresholds that adapt over time, by rolling refit or by time of day, are not implemented.</li>
+<li><strong>Dependency graph.</strong> The graph, call volumes and tier cut-offs are illustrative. The first-order Markov assumption is stated, not tested. See also the <a href="./dependency-graph.html#limitations-of-this-layer">limitations of the graph layer</a>.</li>
+<li><strong>Prevalence.</strong> The test set is about 28% attacks. Real environments are orders of magnitude lower, which is why the <a href="./evaluation.html#base-rates">base-rate table</a> matters more than the ROC curve.</li>
+</ol>
+<p><strong>What real data would replace each assumption.</strong></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 49%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Assumption</th>
+<th style="text-align: left;">Where it is set</th>
+<th style="text-align: left;">What would replace it</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Simulated telemetry</td>
+<td style="text-align: left;"><code>R/sim.R</code></td>
+<td style="text-align: left;">At least four weeks of host-by-window telemetry with an asset inventory</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Simulated attacks</td>
+<td style="text-align: left;"><code>params.yaml: attacks</code></td>
+<td style="text-align: left;">Labelled red-team or incident data</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Dependency graph and call volumes</td>
+<td style="text-align: left;"><code>R/graph.R</code>, <code>params.yaml: graph</code></td>
+<td style="text-align: left;">Service-mesh call logs and session traces</td>
+</tr>
+</tbody>
+</table>
+<p><strong>How to read the table.</strong> Each row is one simulated input. The middle column says where it is defined in the code, and the last column names the real data that would take its place in a production version.</p>
+<p><strong>What the table tells you.</strong> Every result on this site rests on these three simulated inputs. None of them has been checked against real telemetry, real attacks or a real service graph, so the detection rates and tiers are evidence that the method works on data like the simulation, not evidence of how it would perform in a given environment.</p>
+<p><strong>How to use the results.</strong> Use them to compare methods, to see how the thresholds and the base rate interact, and as a template for validating a detector on real data. Do not use the detection rates, false-alarm rates or criticality tiers as estimates for a real environment, and do not use them to justify automated containment: at realistic attack rates most alerts at the 99.9% threshold would be false alarms.</p>
+</section>
+</section>
 <section id="licenses" class="level2">
 <h2 class="anchored" data-anchor-id="licenses">Licenses</h2>
-<p>The code on this site is released under the <a href="./license.html">MIT License</a>. There are no third-party data. Every data set is generated by the code in this repository and falls under the same license. The NIST AI Risk Management Framework and OSFI Guideline E-23 pages are cited by link only, and none of their content is redistributed. R packages keep their own licenses. They are installed through <code>renv</code> from public repositories and are not redistributed here.</p>
+<p>The code on this site is released under the <a href="./license.html">MIT License</a>. There are no third-party data. Every data set is generated by the code in this repository and falls under the same license. The NIST AI Risk Management Framework and OSFI Guideline E-23 pages are cited by link only, and none of their content is redistributed. R packages keep their own licenses. They are installed through <code>renv</code> from public repositories and are not redistributed here. Most are MIT-licensed; those with other terms are:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Package</th>
+<th style="text-align: left;">Used for</th>
+<th style="text-align: left;">License</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>evd</code></td>
+<td style="text-align: left;">Generalized Pareto fits for the EVT thresholds</td>
+<td style="text-align: left;"><a href="https://cran.r-project.org/package=evd">GPL-3</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>igraph</code></td>
+<td style="text-align: left;">Service graph, PageRank, articulation points</td>
+<td style="text-align: left;"><a href="https://cran.r-project.org/package=igraph">GPL (&gt;= 2)</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>binom</code></td>
+<td style="text-align: left;">Wilson confidence intervals on the Evaluation page</td>
+<td style="text-align: left;"><a href="https://cran.r-project.org/package=binom">GPL</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>future</code></td>
+<td style="text-align: left;">Parallel backend for the 30-seed study</td>
+<td style="text-align: left;"><a href="https://cran.r-project.org/package=future">LGPL (&gt;= 2.1)</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>isotree</code></td>
+<td style="text-align: left;">Isolation Forest baseline</td>
+<td style="text-align: left;"><a href="https://cran.r-project.org/package=isotree">BSD 2-clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>yaml</code></td>
+<td style="text-align: left;">Reading <code>params.yaml</code></td>
+<td style="text-align: left;"><a href="https://cran.r-project.org/package=yaml">BSD 3-clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>sessioninfo</code></td>
+<td style="text-align: left;">Session information below</td>
+<td style="text-align: left;"><a href="https://cran.r-project.org/package=sessioninfo">GPL-2</a></td>
+</tr>
+</tbody>
+</table>
 </section>
-<section id="environment" class="level2">
-<h2 class="anchored" data-anchor-id="environment">Software environment</h2>
-<p>The site was built with R and Quarto. The analysis loads <code>tidyverse</code>, <code>gt</code>, <code>patchwork</code>, <code>scales</code> and <code>ggraph</code>, and also calls <code>recipes</code>, <code>yardstick</code>, <code>evd</code>, <code>igraph</code>, <code>isotree</code>, <code>binom</code>, <code>furrr</code>, <code>future</code>, <code>rlang</code>, <code>yaml</code>, <code>testthat</code> and <code>sessioninfo</code>. Package versions are pinned in <code>renv.lock</code>; run <code>renv::restore()</code> to install them.</p>
+<section id="session-info" class="level2">
+<h2 class="anchored" data-anchor-id="session-info">Session information</h2>
+<p>The site was built with R and Quarto. The analysis loads <code>tidyverse</code>, <code>gt</code>, <code>patchwork</code>, <code>scales</code> and <code>ggraph</code>, and also calls <code>recipes</code>, <code>yardstick</code>, <code>evd</code>, <code>igraph</code>, <code>isotree</code>, <code>binom</code>, <code>furrr</code>, <code>future</code>, <code>rlang</code>, <code>yaml</code>, <code>testthat</code>, <code>renv</code> and <code>sessioninfo</code>. Package versions are pinned in <code>renv.lock</code>; run <code>renv::restore()</code> to install them.</p>
 <div class="callout callout-style-default callout-note no-icon callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon no-icon"></i>
 </div>
@@ -1473,7 +2207,7 @@ Table&nbsp;2
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <div class="cell">
 <div class="cell-output cell-output-stdout">
@@ -1484,12 +2218,12 @@ Table&nbsp;2
 #&gt;  system   aarch64, darwin20
 #&gt;  ui       X11
 #&gt;  language (EN)
-#&gt;  collate  en_US.UTF-8
-#&gt;  ctype    en_US.UTF-8
+#&gt;  collate  C.UTF-8
+#&gt;  ctype    C.UTF-8
 #&gt;  tz       America/New_York
-#&gt;  date     2026-11-18
-#&gt;  pandoc   3.10 @ /Applications/Positron.app/Contents/Resources/app/quarto/bin/tools/aarch64/ (via rmarkdown)
-#&gt;  quarto   1.8.26 @ /Applications/quarto/bin/quarto
+#&gt;  date     2026-11-20
+#&gt;  pandoc   3.6.3 @ /Applications/quarto/bin/tools/ (via rmarkdown)
+#&gt;  quarto   1.8.26 @ /usr/local/bin/quarto
 #&gt; 
 #&gt; ─ Packages ───────────────────────────────────────────────────────────────────
 #&gt;  ! package      * version date (UTC) lib source
@@ -2050,157 +2784,216 @@ Table&nbsp;2
   <div class="nav-page nav-page-next">
   </div>
 </nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Reproducibility"</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="an">subtitle:</span><span class="co"> "Cyber Anomaly Detection &amp; Dependency Risk: how to rerun the analysis and check you got the same results"</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: load</span></span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="co">#| include: false</span></span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"R/pages/setup.R"</span>)</span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>Every number on this site comes from a simulation defined in one parameter file, <span class="in">`params.yaml`</span>, and run with explicit random seeds. Nothing is downloaded, and no external data are used. A single script, <span class="in">`run_all.R`</span>, regenerates every result, and the pages only read and display those results. Package versions are pinned with <span class="in">`renv`</span>. Rerunning the same commit with the restored packages should give identical numbers. The <span class="co">[</span><span class="ot">fingerprints</span><span class="co">](#data)</span> below let you check that.</span>
-<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="fu">## Quick start {#quick-start}</span></span>
-<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>Clone the repository and open the project folder in RStudio or Positron:</span>
-<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    <span class="in">``` bash</span></span>
-<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">git</span> clone https://github.com/patrick-lefler/high-dimensional-cyber-anomaly-detection.git</span>
-<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>    <span class="in">```</span></span>
-<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>Restore the pinned packages (see <span class="co">[</span><span class="ot">Software environment</span><span class="co">](#environment)</span>):</span>
-<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>    <span class="in">``` r</span></span>
-<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>    renv<span class="sc">::</span><span class="fu">restore</span>()</span>
-<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>    <span class="in">```</span></span>
-<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a><span class="ss">3. </span>Regenerate the results (under a minute on a laptop), run the tests, and render the site from the project root:</span>
-<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>    <span class="in">``` bash</span></span>
-<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>    <span class="ex">Rscript</span> run_all.R</span>
-<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>    <span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'testthat::test_dir("tests/testthat")'</span></span>
-<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rm</span> <span class="at">-rf</span> _freeze <span class="kw">&amp;&amp;</span> <span class="ex">quarto</span> render</span>
-<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a>    <span class="in">```</span></span>
-<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a>The rendered site is written to <span class="in">`docs/`</span>. The <span class="in">`results/`</span> folder is not committed, so step 3 must run <span class="in">`run_all.R`</span> before the first render. A page rendered without it stops with the message "Results missing: run <span class="in">`Rscript run_all.R`</span> first."</span>
-<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a><span class="fu">## Pipeline {#pipeline}</span></span>
-<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> File <span class="pp">|</span> What it does <span class="pp">|</span> Main outputs <span class="pp">|</span></span>
-<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a><span class="pp">|:------------------|:-----------------------------------|:-----------------------|</span></span>
-<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`params.yaml`</span> <span class="pp">|</span> Every simulation, model, threshold, policy and drift parameter, plus all seeds <span class="pp">|</span> Read by every script and page <span class="pp">|</span></span>
-<span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`R/sim.R`</span> <span class="pp">|</span> Simulates host-by-window telemetry from latent factors (daily cycle, AR(1) persistence, host role) and injects attacks at three intensities <span class="pp">|</span> <span class="in">`simulate_study()`</span> <span class="pp">|</span></span>
-<span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`R/ae.R`</span> <span class="pp">|</span> Autoencoder forward pass, analytic gradients, Adam with early stopping, finite-difference gradient check <span class="pp">|</span> <span class="in">`train_ae()`</span>, <span class="in">`ae_reconstruct()`</span>, <span class="in">`gradient_check()`</span> <span class="pp">|</span></span>
-<span id="cb7-47"><a href="#cb7-47" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`R/evt.R`</span> <span class="pp">|</span> Generalized Pareto thresholds (with the $\xi = 0$ limit), POT fitting, block bootstrap <span class="pp">|</span> <span class="in">`gpd_tau()`</span>, <span class="in">`fit_pot()`</span>, <span class="in">`bootstrap_taus()`</span> <span class="pp">|</span></span>
-<span id="cb7-48"><a href="#cb7-48" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`R/baselines.R`</span> <span class="pp">|</span> z-score, PCA, Mahalanobis and Isolation Forest detectors, AUC helpers <span class="pp">|</span> <span class="in">`fit_baselines()`</span>, <span class="in">`score_baselines()`</span> <span class="pp">|</span></span>
-<span id="cb7-49"><a href="#cb7-49" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`R/graph.R`</span> <span class="pp">|</span> Service graph, row-stochastic transition matrix, PageRank, articulation points, removal impact, tiers <span class="pp">|</span> <span class="in">`analyse_service_graph()`</span> <span class="pp">|</span></span>
-<span id="cb7-50"><a href="#cb7-50" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`R/drift.R`</span> <span class="pp">|</span> PSI, Wasserstein distance, KS tests with Holm correction <span class="pp">|</span> <span class="in">`drift_metrics()`</span> <span class="pp">|</span></span>
-<span id="cb7-51"><a href="#cb7-51" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`R/pipeline.R`</span> <span class="pp">|</span> One full run for one seed: simulate, preprocess, train, fit threshold, evaluate <span class="pp">|</span> <span class="in">`run_pipeline()`</span> <span class="pp">|</span></span>
-<span id="cb7-52"><a href="#cb7-52" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`run_all.R`</span> <span class="pp">|</span> Main run, gradient check, architecture sweep, bootstrap, calibration, declustering, attribution, drift demo, graph, and the 30-seed study <span class="pp">|</span> <span class="in">`results/*.rds`</span> <span class="pp">|</span></span>
-<span id="cb7-53"><a href="#cb7-53" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`R/pages/setup.R`</span> <span class="pp">|</span> Sourced by every page: loads packages, project functions and cached results; sets theme, palettes and number formats <span class="pp">|</span> Shared page objects <span class="pp">|</span></span>
-<span id="cb7-54"><a href="#cb7-54" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-55"><a href="#cb7-55" aria-hidden="true" tabindex="-1"></a>**How to read the table.** Each row is one file in the repository, listed in the order the analysis uses them. The middle column says what the file does in plain terms. The last column names the main functions or files it produces, so you can find where any number on the site was computed. Files in <span class="in">`R/`</span> only define functions. <span class="in">`run_all.R`</span> calls them, and the pages read what it saves.</span>
-<span id="cb7-56"><a href="#cb7-56" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-57"><a href="#cb7-57" aria-hidden="true" tabindex="-1"></a>**What the table tells you.** The analysis has one entry point and one place for assumptions. Changing a parameter means editing <span class="in">`params.yaml`</span>, rerunning <span class="in">`run_all.R`</span> and re-rendering; no page computes anything that the script did not. Every page sources the same setup file, so all five analysis pages work from identical objects and cannot disagree with each other. The functions are small and individually tested, which makes each step straightforward to check or replace.</span>
-<span id="cb7-58"><a href="#cb7-58" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-59"><a href="#cb7-59" aria-hidden="true" tabindex="-1"></a><span class="fu">## Data and result fingerprints {#data}</span></span>
-<span id="cb7-60"><a href="#cb7-60" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-61"><a href="#cb7-61" aria-hidden="true" tabindex="-1"></a>There are no input data files. All telemetry, attacks and the service graph are generated by <span class="in">`R/sim.R`</span> and <span class="in">`R/graph.R`</span> from the values in <span class="in">`params.yaml`</span>. To replace the simulation with real data, see the <span class="co">[</span><span class="ot">Limitations</span><span class="co">](index.qmd#limitations)</span> on the Overview page.</span>
-<span id="cb7-62"><a href="#cb7-62" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-63"><a href="#cb7-63" aria-hidden="true" tabindex="-1"></a>Because the inputs are code and parameters, the useful check is on the outputs. The table fingerprints the parameter file and the key numeric results. File-level checksums of <span class="in">`results/main.rds`</span> and <span class="in">`results/graph.rds`</span> are not used: those files store a fitted recipe and an igraph object that carry session-specific environments and IDs, so their bytes change from run to run even when every number is identical.</span>
-<span id="cb7-64"><a href="#cb7-64" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-67"><a href="#cb7-67" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb7-68"><a href="#cb7-68" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: tbl-fingerprints</span></span>
-<span id="cb7-69"><a href="#cb7-69" aria-hidden="true" tabindex="-1"></a>fingerprints <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
-<span id="cb7-70"><a href="#cb7-70" aria-hidden="true" tabindex="-1"></a>  <span class="at">Item =</span> <span class="fu">c</span>(</span>
-<span id="cb7-71"><a href="#cb7-71" aria-hidden="true" tabindex="-1"></a>    <span class="st">"params.yaml (file)"</span>, <span class="st">"Test-set reconstruction losses"</span>, <span class="st">"EVT thresholds"</span>,</span>
-<span id="cb7-72"><a href="#cb7-72" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Main-run summary metrics"</span>, <span class="st">"Service criticality table"</span>, <span class="st">"30-seed robustness results"</span>,</span>
-<span id="cb7-73"><a href="#cb7-73" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Bootstrap threshold draws"</span>, <span class="st">"Drift metrics"</span></span>
-<span id="cb7-74"><a href="#cb7-74" aria-hidden="true" tabindex="-1"></a>  ),</span>
-<span id="cb7-75"><a href="#cb7-75" aria-hidden="true" tabindex="-1"></a>  <span class="at">Method =</span> <span class="fu">c</span>(<span class="st">"MD5 of file"</span>, <span class="fu">rep</span>(<span class="st">"rlang::hash() of object"</span>, <span class="dv">7</span>)),</span>
-<span id="cb7-76"><a href="#cb7-76" aria-hidden="true" tabindex="-1"></a>  <span class="at">Fingerprint =</span> <span class="fu">c</span>(</span>
-<span id="cb7-77"><a href="#cb7-77" aria-hidden="true" tabindex="-1"></a>    <span class="fu">unname</span>(tools<span class="sc">::</span><span class="fu">md5sum</span>(<span class="st">"params.yaml"</span>)),</span>
-<span id="cb7-78"><a href="#cb7-78" aria-hidden="true" tabindex="-1"></a>    rlang<span class="sc">::</span><span class="fu">hash</span>(main<span class="sc">$</span>test<span class="sc">$</span>recon_loss), rlang<span class="sc">::</span><span class="fu">hash</span>(main<span class="sc">$</span>taus), rlang<span class="sc">::</span><span class="fu">hash</span>(main<span class="sc">$</span>summary),</span>
-<span id="cb7-79"><a href="#cb7-79" aria-hidden="true" tabindex="-1"></a>    rlang<span class="sc">::</span><span class="fu">hash</span>(graph<span class="sc">$</span>table), rlang<span class="sc">::</span><span class="fu">hash</span>(robust), rlang<span class="sc">::</span><span class="fu">hash</span>(analysis<span class="sc">$</span>boot), rlang<span class="sc">::</span><span class="fu">hash</span>(analysis<span class="sc">$</span>drift)</span>
-<span id="cb7-80"><a href="#cb7-80" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb7-81"><a href="#cb7-81" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb7-82"><a href="#cb7-82" aria-hidden="true" tabindex="-1"></a>fingerprints <span class="sc">|&gt;</span></span>
-<span id="cb7-83"><a href="#cb7-83" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gt</span>() <span class="sc">|&gt;</span></span>
-<span id="cb7-84"><a href="#cb7-84" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_header</span>(</span>
-<span id="cb7-85"><a href="#cb7-85" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="fu">md</span>(<span class="st">"**Fingerprints of the inputs and results used in this render**"</span>),</span>
-<span id="cb7-86"><a href="#cb7-86" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="fu">paste0</span>(<span class="st">"Rendered "</span>, <span class="fu">Sys.Date</span>())</span>
-<span id="cb7-87"><a href="#cb7-87" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
-<span id="cb7-88"><a href="#cb7-88" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cols_align</span>(<span class="at">align =</span> <span class="st">"left"</span>) <span class="sc">|&gt;</span></span>
-<span id="cb7-89"><a href="#cb7-89" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_options</span>(<span class="at">table.font.size =</span> <span class="dv">12</span>)</span>
-<span id="cb7-90"><a href="#cb7-90" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb7-91"><a href="#cb7-91" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-92"><a href="#cb7-92" aria-hidden="true" tabindex="-1"></a>**How to read the table.** Each row is one input or result. The fingerprint is a short code computed from its exact contents. For the parameter file it is a standard MD5 checksum of the file. For results it is a hash of the numbers themselves, computed in R with <span class="in">`rlang::hash()`</span>. Changing even one value produces a completely different code. The subtitle gives the date this page was rendered.</span>
-<span id="cb7-93"><a href="#cb7-93" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-94"><a href="#cb7-94" aria-hidden="true" tabindex="-1"></a>**What the table tells you.** Anyone who reruns <span class="in">`run_all.R`</span> with the restored packages can compute the same fingerprints. If they all match, the rerun reproduced this site's numbers exactly. We checked this by running the pipeline repeatedly, including the parallel 30-seed study, and every fingerprint matched. A mismatch on <span class="in">`params.yaml`</span> means the assumptions changed. A mismatch on results with the same parameters points to a different package version.</span>
-<span id="cb7-95"><a href="#cb7-95" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-96"><a href="#cb7-96" aria-hidden="true" tabindex="-1"></a><span class="fu">## Parameters and seeds {#parameters}</span></span>
-<span id="cb7-97"><a href="#cb7-97" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-98"><a href="#cb7-98" aria-hidden="true" tabindex="-1"></a>All assumptions live in <span class="in">`params.yaml`</span>, each labelled as an assumption with its range. The seeds are:</span>
-<span id="cb7-99"><a href="#cb7-99" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-100"><a href="#cb7-100" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Main run:** seed <span class="in">`r cfg$seeds$main`</span>, used for every single-run plot and table.</span>
-<span id="cb7-101"><a href="#cb7-101" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Robustness study:** seeds 1 to <span class="in">`r cfg$seeds$robustness`</span>, one complete pipeline each.</span>
-<span id="cb7-102"><a href="#cb7-102" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Service graph:** seed <span class="in">`r cfg$graph$seed`</span> for the simulated call volumes.</span>
-<span id="cb7-103"><a href="#cb7-103" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Secondary analyses** in <span class="in">`run_all.R`</span> (gradient check, architecture sweep, bootstrap, drift demo, routing) use fixed offsets from the main seed.</span>
-<span id="cb7-104"><a href="#cb7-104" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-105"><a href="#cb7-105" aria-hidden="true" tabindex="-1"></a><span class="in">`run_pipeline()`</span> calls <span class="in">`set.seed()`</span> with its own seed at the start, so each run draws the same random numbers whether the 30-seed study runs on one core or many. The page also re-derives the heatmap sample from the main seed, so the "random" incidents shown are the same in every render.</span>
-<span id="cb7-106"><a href="#cb7-106" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-107"><a href="#cb7-107" aria-hidden="true" tabindex="-1"></a><span class="fu">## Tests {#tests}</span></span>
-<span id="cb7-108"><a href="#cb7-108" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-109"><a href="#cb7-109" aria-hidden="true" tabindex="-1"></a>Core functions are covered by <span class="in">`testthat`</span> tests in <span class="in">`tests/testthat/`</span>. The table shows the result of running them during this render.</span>
-<span id="cb7-110"><a href="#cb7-110" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-113"><a href="#cb7-113" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb7-114"><a href="#cb7-114" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: tbl-tests</span></span>
-<span id="cb7-115"><a href="#cb7-115" aria-hidden="true" tabindex="-1"></a>test_results <span class="ot">&lt;-</span> testthat<span class="sc">::</span><span class="fu">test_dir</span>(<span class="st">"tests/testthat"</span>, <span class="at">reporter =</span> <span class="st">"silent"</span>, <span class="at">stop_on_failure =</span> <span class="cn">FALSE</span>) <span class="sc">|&gt;</span></span>
-<span id="cb7-116"><a href="#cb7-116" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>()</span>
-<span id="cb7-117"><a href="#cb7-117" aria-hidden="true" tabindex="-1"></a>test_results <span class="sc">|&gt;</span></span>
-<span id="cb7-118"><a href="#cb7-118" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transmute</span>(</span>
-<span id="cb7-119"><a href="#cb7-119" aria-hidden="true" tabindex="-1"></a>    <span class="at">Test =</span> test,</span>
-<span id="cb7-120"><a href="#cb7-120" aria-hidden="true" tabindex="-1"></a>    <span class="at">Checks =</span> nb,</span>
-<span id="cb7-121"><a href="#cb7-121" aria-hidden="true" tabindex="-1"></a>    <span class="at">Passed =</span> nb <span class="sc">-</span> failed <span class="sc">-</span> <span class="fu">as.integer</span>(error) <span class="sc">-</span> skipped,</span>
-<span id="cb7-122"><a href="#cb7-122" aria-hidden="true" tabindex="-1"></a>    <span class="at">Failed =</span> failed <span class="sc">+</span> <span class="fu">as.integer</span>(error),</span>
-<span id="cb7-123"><a href="#cb7-123" aria-hidden="true" tabindex="-1"></a>    <span class="at">Skipped =</span> <span class="fu">as.integer</span>(skipped)</span>
-<span id="cb7-124"><a href="#cb7-124" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
-<span id="cb7-125"><a href="#cb7-125" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gt</span>() <span class="sc">|&gt;</span></span>
-<span id="cb7-126"><a href="#cb7-126" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_header</span>(</span>
-<span id="cb7-127"><a href="#cb7-127" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="fu">md</span>(<span class="st">"**Unit test results**"</span>),</span>
-<span id="cb7-128"><a href="#cb7-128" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="fu">sprintf</span>(<span class="st">"%d tests, %d checks, run %s"</span>, <span class="fu">nrow</span>(test_results), <span class="fu">sum</span>(test_results<span class="sc">$</span>nb), <span class="fu">Sys.Date</span>())</span>
-<span id="cb7-129"><a href="#cb7-129" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
-<span id="cb7-130"><a href="#cb7-130" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_options</span>(<span class="at">table.font.size =</span> <span class="dv">12</span>)</span>
-<span id="cb7-131"><a href="#cb7-131" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb7-132"><a href="#cb7-132" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-133"><a href="#cb7-133" aria-hidden="true" tabindex="-1"></a>**How to read the table.** Each row is one automated test of a core function. "Checks" is the number of individual conditions the test verifies, such as "this value is finite" or "these two answers agree". "Passed", "Failed" and "Skipped" count how those checks came out when the tests ran during this render. A healthy project shows every check passed and none failed or skipped.</span>
-<span id="cb7-134"><a href="#cb7-134" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-135"><a href="#cb7-135" aria-hidden="true" tabindex="-1"></a>**What the table tells you.** <span class="in">`r n_fail &lt;- sum(test_results$failed) + sum(test_results$error); if (n_fail == 0) sprintf("All %d tests pass, covering %d checks.", nrow(test_results), sum(test_results$nb)) else sprintf("%d of %d checks failed in this render, so the results below should not be trusted until they are fixed.", n_fail, sum(test_results$nb))`</span> They confirm that the threshold formula handles the exponential special case, that the hand-derived gradients match numerical estimates, that the transition matrix is a valid probability table and PageRank matches igraph, and that the drift metrics, AUC helper and simulator behave as expected. Because they run at every render, a broken function would show up here.</span>
-<span id="cb7-136"><a href="#cb7-136" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-137"><a href="#cb7-137" aria-hidden="true" tabindex="-1"></a><span class="fu">## Caching {#caching}</span></span>
-<span id="cb7-138"><a href="#cb7-138" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-139"><a href="#cb7-139" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Results cache (`results/*.rds`).** Written by <span class="in">`run_all.R`</span> and read by every page. Pages never recompute it, and the folder is not in git. Rerun <span class="in">`run_all.R`</span> after any change to <span class="in">`params.yaml`</span> or to a script in <span class="in">`R/`</span>. Nothing invalidates the cache automatically.</span>
-<span id="cb7-140"><a href="#cb7-140" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Quarto freeze (`_freeze/`).** <span class="in">`_quarto.yml`</span> sets <span class="in">`freeze: auto`</span>, so a full <span class="in">`quarto render`</span> re-executes a page only when that page's <span class="in">`.qmd`</span> file changes. Changes to <span class="in">`results/`</span> or the <span class="in">`R/`</span> scripts do not count. After rerunning <span class="in">`run_all.R`</span>, delete <span class="in">`_freeze/`</span> and render the whole site, or render each page explicitly (for example <span class="in">`quarto render evaluation.qmd`</span>), because Quarto always executes a page that is rendered on its own.</span>
-<span id="cb7-141"><a href="#cb7-141" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-142"><a href="#cb7-142" aria-hidden="true" tabindex="-1"></a><span class="fu">## Licenses {#licenses}</span></span>
-<span id="cb7-143"><a href="#cb7-143" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-144"><a href="#cb7-144" aria-hidden="true" tabindex="-1"></a>The code on this site is released under the <span class="co">[</span><span class="ot">MIT License</span><span class="co">](license.qmd)</span>. There are no third-party data. Every data set is generated by the code in this repository and falls under the same license. The NIST AI Risk Management Framework and OSFI Guideline E-23 pages are cited by link only, and none of their content is redistributed. R packages keep their own licenses. They are installed through <span class="in">`renv`</span> from public repositories and are not redistributed here.</span>
-<span id="cb7-145"><a href="#cb7-145" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-146"><a href="#cb7-146" aria-hidden="true" tabindex="-1"></a><span class="fu">## Software environment {#environment}</span></span>
-<span id="cb7-147"><a href="#cb7-147" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-148"><a href="#cb7-148" aria-hidden="true" tabindex="-1"></a>The site was built with R and Quarto. The analysis loads <span class="in">`tidyverse`</span>, <span class="in">`gt`</span>, <span class="in">`patchwork`</span>, <span class="in">`scales`</span> and <span class="in">`ggraph`</span>, and also calls <span class="in">`recipes`</span>, <span class="in">`yardstick`</span>, <span class="in">`evd`</span>, <span class="in">`igraph`</span>, <span class="in">`isotree`</span>, <span class="in">`binom`</span>, <span class="in">`furrr`</span>, <span class="in">`future`</span>, <span class="in">`rlang`</span>, <span class="in">`yaml`</span>, <span class="in">`testthat`</span> and <span class="in">`sessioninfo`</span>. Package versions are pinned in <span class="in">`renv.lock`</span>; run <span class="in">`renv::restore()`</span> to install them.</span>
-<span id="cb7-149"><a href="#cb7-149" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-150"><a href="#cb7-150" aria-hidden="true" tabindex="-1"></a>::: {.callout-note icon=false collapse="true"}</span>
-<span id="cb7-151"><a href="#cb7-151" aria-hidden="true" tabindex="-1"></a><span class="fu">## Full R session information</span></span>
-<span id="cb7-154"><a href="#cb7-154" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb7-155"><a href="#cb7-155" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: session-information</span></span>
-<span id="cb7-156"><a href="#cb7-156" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
-<span id="cb7-157"><a href="#cb7-157" aria-hidden="true" tabindex="-1"></a>sessioninfo<span class="sc">::</span><span class="fu">session_info</span>()</span>
-<span id="cb7-158"><a href="#cb7-158" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb7-159"><a href="#cb7-159" aria-hidden="true" tabindex="-1"></a>:::</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Reproducibility"</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="an">subtitle:</span><span class="co"> "Cyber Anomaly Detection &amp; Dependency Risk: how to rerun the analysis and where the results can mislead"</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: load</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="co">#| include: false</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="co"># setup.R sources every script in R/, including R/repro_env.R</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"R/pages/setup.R"</span>)</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>Every number on this site comes from a simulation defined in one parameter file, <span class="in">`params.yaml`</span>, and run with explicit random seeds. Nothing is downloaded, and no external data are used. A single script, <span class="in">`run_all.R`</span>, regenerates every result, and the pages only read and display those results. Package versions are pinned with <span class="in">`renv`</span>. Rerunning the same commit with the restored packages should give identical numbers. The <span class="co">[</span><span class="ot">fingerprints</span><span class="co">](#data)</span> below let you check that. This page explains how to rebuild the site, records the environment it was built in, and states where the results can mislead.</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="fu">## Quick start {#quick-start}</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>The code is in the GitHub repository <span class="co">[</span><span class="ot">patrick-lefler/high-dimensional-cyber-anomaly-detection</span><span class="co">](https://github.com/patrick-lefler/high-dimensional-cyber-anomaly-detection)</span>. To rebuild everything from a clean copy, run these commands from a terminal:</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a><span class="in">``` bash</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/patrick-lefler/high-dimensional-cyber-anomaly-detection</span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> high-dimensional-cyber-anomaly-detection</span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a><span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'renv::restore()'</span>                         <span class="co"># once: install the package versions pinned in renv.lock</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a><span class="ex">Rscript</span> run_all.R                                    <span class="co"># regenerate results/ (under a minute on a laptop)</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a><span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'testthat::test_dir("tests/testthat")'</span>    <span class="co"># optional: run the unit tests</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-rf</span> _freeze <span class="kw">&amp;&amp;</span> <span class="ex">quarto</span> render                      <span class="co"># render the site</span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>The rendered site is written to <span class="in">`docs/`</span>. The <span class="in">`results/`</span> folder is not committed, so <span class="in">`run_all.R`</span> must run before the first render. A page rendered without it stops with the message "Results missing: run <span class="in">`Rscript run_all.R`</span> first." Deleting <span class="in">`_freeze/`</span> makes Quarto re-execute every page against the new results (see <span class="co">[</span><span class="ot">Caching</span><span class="co">](#caching)</span>).</span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a><span class="fu">## Environment {#environment}</span></span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: tbl-env</span></span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a><span class="fu">repro_env_table</span>(<span class="at">packages =</span> <span class="fu">c</span>(<span class="st">"recipes"</span>, <span class="st">"evd"</span>, <span class="st">"isotree"</span>, <span class="st">"igraph"</span>, <span class="st">"yardstick"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gt</span>() <span class="sc">|&gt;</span></span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_header</span>(<span class="at">title =</span> <span class="fu">md</span>(<span class="st">"**Software used to build this page**"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cols_align</span>(<span class="at">align =</span> <span class="st">"left"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_options</span>(<span class="at">table.font.size =</span> <span class="dv">12</span>)</span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a>**How to read the table.** Each row is one piece of software this page was built with and its version. The "Packages" row says whether the installed R packages match the versions pinned in <span class="in">`renv.lock`</span>. The last five rows are the packages the results depend on most: <span class="in">`recipes`</span> (preprocessing), <span class="in">`evd`</span> (generalized Pareto fits for the thresholds), <span class="in">`isotree`</span> (Isolation Forest baseline), <span class="in">`igraph`</span> (service graph) and <span class="in">`yardstick`</span> (evaluation metrics).</span>
+<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a>**What the table tells you.** If your versions match these and the packages are in sync, rebuilding the project should give the same numbers. If they differ, small differences in the results may come from the software rather than the analysis.</span>
+<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a><span class="fu">## Pipeline {#pipeline}</span></span>
+<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> File <span class="pp">|</span> What it does <span class="pp">|</span> Main outputs <span class="pp">|</span></span>
+<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a><span class="pp">|:------------------|:-----------------------------------|:-----------------------|</span></span>
+<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`params.yaml`</span> <span class="pp">|</span> Every simulation, model, threshold, policy and drift parameter, plus all seeds <span class="pp">|</span> Read by every script and page <span class="pp">|</span></span>
+<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`R/sim.R`</span> <span class="pp">|</span> Simulates host-by-window telemetry from latent factors (daily cycle, AR(1) persistence, host role) and injects attacks at three intensities <span class="pp">|</span> <span class="in">`simulate_study()`</span> <span class="pp">|</span></span>
+<span id="cb6-56"><a href="#cb6-56" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`R/ae.R`</span> <span class="pp">|</span> Autoencoder forward pass, analytic gradients, Adam with early stopping, finite-difference gradient check <span class="pp">|</span> <span class="in">`train_ae()`</span>, <span class="in">`ae_reconstruct()`</span>, <span class="in">`gradient_check()`</span> <span class="pp">|</span></span>
+<span id="cb6-57"><a href="#cb6-57" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`R/evt.R`</span> <span class="pp">|</span> Generalized Pareto thresholds (with the $\xi = 0$ limit), POT fitting, block bootstrap <span class="pp">|</span> <span class="in">`gpd_tau()`</span>, <span class="in">`fit_pot()`</span>, <span class="in">`bootstrap_taus()`</span> <span class="pp">|</span></span>
+<span id="cb6-58"><a href="#cb6-58" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`R/baselines.R`</span> <span class="pp">|</span> z-score, PCA, Mahalanobis and Isolation Forest detectors, AUC helpers <span class="pp">|</span> <span class="in">`fit_baselines()`</span>, <span class="in">`score_baselines()`</span> <span class="pp">|</span></span>
+<span id="cb6-59"><a href="#cb6-59" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`R/graph.R`</span> <span class="pp">|</span> Service graph, row-stochastic transition matrix, PageRank, articulation points, removal impact, tiers <span class="pp">|</span> <span class="in">`analyse_service_graph()`</span> <span class="pp">|</span></span>
+<span id="cb6-60"><a href="#cb6-60" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`R/drift.R`</span> <span class="pp">|</span> PSI, Wasserstein distance, KS tests with Holm correction <span class="pp">|</span> <span class="in">`drift_metrics()`</span> <span class="pp">|</span></span>
+<span id="cb6-61"><a href="#cb6-61" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`R/pipeline.R`</span> <span class="pp">|</span> One full run for one seed: simulate, preprocess, train, fit threshold, evaluate <span class="pp">|</span> <span class="in">`run_pipeline()`</span> <span class="pp">|</span></span>
+<span id="cb6-62"><a href="#cb6-62" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`run_all.R`</span> <span class="pp">|</span> Main run, gradient check, architecture sweep, bootstrap, calibration, declustering, attribution, drift demo, graph, and the 30-seed study <span class="pp">|</span> <span class="in">`results/*.rds`</span> <span class="pp">|</span></span>
+<span id="cb6-63"><a href="#cb6-63" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`R/pages/setup.R`</span> <span class="pp">|</span> Sourced by every page: loads packages, project functions and cached results; sets theme, palettes and number formats <span class="pp">|</span> Shared page objects <span class="pp">|</span></span>
+<span id="cb6-64"><a href="#cb6-64" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`R/repro_env.R`</span> <span class="pp">|</span> Builds the environment table on this page <span class="pp">|</span> <span class="in">`repro_env_table()`</span> <span class="pp">|</span></span>
+<span id="cb6-65"><a href="#cb6-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-66"><a href="#cb6-66" aria-hidden="true" tabindex="-1"></a>**How to read the table.** Each row is one file in the repository, listed in the order the analysis uses them. The middle column says what the file does in plain terms. The last column names the main functions or files it produces, so you can find where any number on the site was computed. Files in <span class="in">`R/`</span> only define functions. <span class="in">`run_all.R`</span> calls them, and the pages read what it saves.</span>
+<span id="cb6-67"><a href="#cb6-67" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-68"><a href="#cb6-68" aria-hidden="true" tabindex="-1"></a>**What the table tells you.** The analysis has one entry point and one place for assumptions. Changing a parameter means editing <span class="in">`params.yaml`</span>, rerunning <span class="in">`run_all.R`</span> and re-rendering; no page computes anything that the script did not. Every page sources the same setup file, so all five analysis pages work from identical objects and cannot disagree with each other. The functions are small and individually tested, which makes each step straightforward to check or replace.</span>
+<span id="cb6-69"><a href="#cb6-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-70"><a href="#cb6-70" aria-hidden="true" tabindex="-1"></a><span class="fu">## Data {#data}</span></span>
+<span id="cb6-71"><a href="#cb6-71" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-72"><a href="#cb6-72" aria-hidden="true" tabindex="-1"></a>There are no input data files. All telemetry, attacks and the service graph are generated by <span class="in">`R/sim.R`</span> and <span class="in">`R/graph.R`</span> from the values in <span class="in">`params.yaml`</span>. To replace the simulation with real data, see <span class="co">[</span><span class="ot">Model limitations</span><span class="co">](#sec-limitations)</span> below.</span>
+<span id="cb6-73"><a href="#cb6-73" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-74"><a href="#cb6-74" aria-hidden="true" tabindex="-1"></a>Because the inputs are code and parameters, the useful check is on the outputs. The table fingerprints the parameter file and the key numeric results. File-level checksums of <span class="in">`results/main.rds`</span> and <span class="in">`results/graph.rds`</span> are not used: those files store a fitted recipe and an igraph object that carry session-specific environments and IDs, so their bytes change from run to run even when every number is identical.</span>
+<span id="cb6-75"><a href="#cb6-75" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-78"><a href="#cb6-78" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb6-79"><a href="#cb6-79" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: tbl-fingerprints</span></span>
+<span id="cb6-80"><a href="#cb6-80" aria-hidden="true" tabindex="-1"></a>fingerprints <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb6-81"><a href="#cb6-81" aria-hidden="true" tabindex="-1"></a>  <span class="at">Item =</span> <span class="fu">c</span>(</span>
+<span id="cb6-82"><a href="#cb6-82" aria-hidden="true" tabindex="-1"></a>    <span class="st">"params.yaml (file)"</span>, <span class="st">"Test-set reconstruction losses"</span>, <span class="st">"EVT thresholds"</span>,</span>
+<span id="cb6-83"><a href="#cb6-83" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Main-run summary metrics"</span>, <span class="st">"Service criticality table"</span>, <span class="st">"30-seed robustness results"</span>,</span>
+<span id="cb6-84"><a href="#cb6-84" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Bootstrap threshold draws"</span>, <span class="st">"Drift metrics"</span></span>
+<span id="cb6-85"><a href="#cb6-85" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb6-86"><a href="#cb6-86" aria-hidden="true" tabindex="-1"></a>  <span class="at">Method =</span> <span class="fu">c</span>(<span class="st">"MD5 of file"</span>, <span class="fu">rep</span>(<span class="st">"rlang::hash() of object"</span>, <span class="dv">7</span>)),</span>
+<span id="cb6-87"><a href="#cb6-87" aria-hidden="true" tabindex="-1"></a>  <span class="at">Fingerprint =</span> <span class="fu">c</span>(</span>
+<span id="cb6-88"><a href="#cb6-88" aria-hidden="true" tabindex="-1"></a>    <span class="fu">unname</span>(tools<span class="sc">::</span><span class="fu">md5sum</span>(<span class="st">"params.yaml"</span>)),</span>
+<span id="cb6-89"><a href="#cb6-89" aria-hidden="true" tabindex="-1"></a>    rlang<span class="sc">::</span><span class="fu">hash</span>(main<span class="sc">$</span>test<span class="sc">$</span>recon_loss), rlang<span class="sc">::</span><span class="fu">hash</span>(main<span class="sc">$</span>taus), rlang<span class="sc">::</span><span class="fu">hash</span>(main<span class="sc">$</span>summary),</span>
+<span id="cb6-90"><a href="#cb6-90" aria-hidden="true" tabindex="-1"></a>    rlang<span class="sc">::</span><span class="fu">hash</span>(graph<span class="sc">$</span>table), rlang<span class="sc">::</span><span class="fu">hash</span>(robust), rlang<span class="sc">::</span><span class="fu">hash</span>(analysis<span class="sc">$</span>boot), rlang<span class="sc">::</span><span class="fu">hash</span>(analysis<span class="sc">$</span>drift)</span>
+<span id="cb6-91"><a href="#cb6-91" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb6-92"><a href="#cb6-92" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-93"><a href="#cb6-93" aria-hidden="true" tabindex="-1"></a>fingerprints <span class="sc">|&gt;</span></span>
+<span id="cb6-94"><a href="#cb6-94" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gt</span>() <span class="sc">|&gt;</span></span>
+<span id="cb6-95"><a href="#cb6-95" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_header</span>(<span class="at">title =</span> <span class="fu">md</span>(<span class="st">"**Fingerprints of the inputs and results used in this render**"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb6-96"><a href="#cb6-96" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cols_align</span>(<span class="at">align =</span> <span class="st">"left"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb6-97"><a href="#cb6-97" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_options</span>(<span class="at">table.font.size =</span> <span class="dv">12</span>)</span>
+<span id="cb6-98"><a href="#cb6-98" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb6-99"><a href="#cb6-99" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-100"><a href="#cb6-100" aria-hidden="true" tabindex="-1"></a>**How to read the table.** Each row is one input or result. The fingerprint is a short code computed from its exact contents. For the parameter file it is a standard MD5 checksum of the file. For results it is a hash of the numbers themselves, computed in R with <span class="in">`rlang::hash()`</span>. Changing even one value produces a completely different code.</span>
+<span id="cb6-101"><a href="#cb6-101" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-102"><a href="#cb6-102" aria-hidden="true" tabindex="-1"></a>**What the table tells you.** Anyone who reruns <span class="in">`run_all.R`</span> with the restored packages can compute the same fingerprints. If they all match, the rerun reproduced this site's numbers exactly. We checked this by running the pipeline repeatedly, including the parallel 30-seed study, and every fingerprint matched. A mismatch on <span class="in">`params.yaml`</span> means the assumptions changed. A mismatch on results with the same parameters points to a different package version.</span>
+<span id="cb6-103"><a href="#cb6-103" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-104"><a href="#cb6-104" aria-hidden="true" tabindex="-1"></a><span class="fu">## Parameters and seeds {#parameters}</span></span>
+<span id="cb6-105"><a href="#cb6-105" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-106"><a href="#cb6-106" aria-hidden="true" tabindex="-1"></a>All assumptions live in <span class="in">`params.yaml`</span>, each labelled as an assumption with its range. The seeds are:</span>
+<span id="cb6-107"><a href="#cb6-107" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-108"><a href="#cb6-108" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Main run:** seed <span class="in">`r cfg$seeds$main`</span>, used for every single-run plot and table.</span>
+<span id="cb6-109"><a href="#cb6-109" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Robustness study:** seeds 1 to <span class="in">`r cfg$seeds$robustness`</span>, one complete pipeline each.</span>
+<span id="cb6-110"><a href="#cb6-110" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Service graph:** seed <span class="in">`r cfg$graph$seed`</span> for the simulated call volumes.</span>
+<span id="cb6-111"><a href="#cb6-111" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Secondary analyses** in <span class="in">`run_all.R`</span> (gradient check, architecture sweep, bootstrap, drift demo, routing) use fixed offsets from the main seed.</span>
+<span id="cb6-112"><a href="#cb6-112" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-113"><a href="#cb6-113" aria-hidden="true" tabindex="-1"></a><span class="in">`run_pipeline()`</span> calls <span class="in">`set.seed()`</span> with its own seed at the start, so each run draws the same random numbers whether the 30-seed study runs on one core or many. The page also re-derives the heatmap sample from the main seed, so the "random" incidents shown are the same in every render.</span>
+<span id="cb6-114"><a href="#cb6-114" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-115"><a href="#cb6-115" aria-hidden="true" tabindex="-1"></a>::: {.callout-note icon="false" collapse="true"}</span>
+<span id="cb6-116"><a href="#cb6-116" aria-hidden="true" tabindex="-1"></a><span class="fu">## params.yaml</span></span>
+<span id="cb6-117"><a href="#cb6-117" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-120"><a href="#cb6-120" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb6-121"><a href="#cb6-121" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: params-yaml</span></span>
+<span id="cb6-122"><a href="#cb6-122" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
+<span id="cb6-123"><a href="#cb6-123" aria-hidden="true" tabindex="-1"></a><span class="co">#| results: asis</span></span>
+<span id="cb6-124"><a href="#cb6-124" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"```yaml</span><span class="sc">\n</span><span class="st">"</span>, <span class="fu">paste</span>(<span class="fu">readLines</span>(<span class="st">"params.yaml"</span>), <span class="at">collapse =</span> <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">```</span><span class="sc">\n</span><span class="st">"</span>, <span class="at">sep =</span> <span class="st">""</span>)</span>
+<span id="cb6-125"><a href="#cb6-125" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb6-126"><a href="#cb6-126" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb6-127"><a href="#cb6-127" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-128"><a href="#cb6-128" aria-hidden="true" tabindex="-1"></a><span class="fu">## Tests {#tests}</span></span>
+<span id="cb6-129"><a href="#cb6-129" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-130"><a href="#cb6-130" aria-hidden="true" tabindex="-1"></a>Core functions are covered by <span class="in">`testthat`</span> tests in <span class="in">`tests/testthat/`</span>. The table shows the result of running them during this render.</span>
+<span id="cb6-131"><a href="#cb6-131" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-134"><a href="#cb6-134" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb6-135"><a href="#cb6-135" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: tbl-tests</span></span>
+<span id="cb6-136"><a href="#cb6-136" aria-hidden="true" tabindex="-1"></a>test_results <span class="ot">&lt;-</span> testthat<span class="sc">::</span><span class="fu">test_dir</span>(<span class="st">"tests/testthat"</span>, <span class="at">reporter =</span> <span class="st">"silent"</span>, <span class="at">stop_on_failure =</span> <span class="cn">FALSE</span>) <span class="sc">|&gt;</span></span>
+<span id="cb6-137"><a href="#cb6-137" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>()</span>
+<span id="cb6-138"><a href="#cb6-138" aria-hidden="true" tabindex="-1"></a>test_results <span class="sc">|&gt;</span></span>
+<span id="cb6-139"><a href="#cb6-139" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transmute</span>(</span>
+<span id="cb6-140"><a href="#cb6-140" aria-hidden="true" tabindex="-1"></a>    <span class="at">Test =</span> test,</span>
+<span id="cb6-141"><a href="#cb6-141" aria-hidden="true" tabindex="-1"></a>    <span class="at">Checks =</span> nb,</span>
+<span id="cb6-142"><a href="#cb6-142" aria-hidden="true" tabindex="-1"></a>    <span class="at">Passed =</span> nb <span class="sc">-</span> failed <span class="sc">-</span> <span class="fu">as.integer</span>(error) <span class="sc">-</span> skipped,</span>
+<span id="cb6-143"><a href="#cb6-143" aria-hidden="true" tabindex="-1"></a>    <span class="at">Failed =</span> failed <span class="sc">+</span> <span class="fu">as.integer</span>(error),</span>
+<span id="cb6-144"><a href="#cb6-144" aria-hidden="true" tabindex="-1"></a>    <span class="at">Skipped =</span> <span class="fu">as.integer</span>(skipped)</span>
+<span id="cb6-145"><a href="#cb6-145" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb6-146"><a href="#cb6-146" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gt</span>() <span class="sc">|&gt;</span></span>
+<span id="cb6-147"><a href="#cb6-147" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_header</span>(</span>
+<span id="cb6-148"><a href="#cb6-148" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="fu">md</span>(<span class="st">"**Unit test results**"</span>),</span>
+<span id="cb6-149"><a href="#cb6-149" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="fu">sprintf</span>(<span class="st">"%d tests, %d checks"</span>, <span class="fu">nrow</span>(test_results), <span class="fu">sum</span>(test_results<span class="sc">$</span>nb))</span>
+<span id="cb6-150"><a href="#cb6-150" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb6-151"><a href="#cb6-151" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_options</span>(<span class="at">table.font.size =</span> <span class="dv">12</span>)</span>
+<span id="cb6-152"><a href="#cb6-152" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb6-153"><a href="#cb6-153" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-154"><a href="#cb6-154" aria-hidden="true" tabindex="-1"></a>**How to read the table.** Each row is one automated test of a core function. "Checks" is the number of individual conditions the test verifies, such as "this value is finite" or "these two answers agree". "Passed", "Failed" and "Skipped" count how those checks came out when the tests ran during this render. A healthy project shows every check passed and none failed or skipped.</span>
+<span id="cb6-155"><a href="#cb6-155" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-156"><a href="#cb6-156" aria-hidden="true" tabindex="-1"></a>**What the table tells you.** <span class="in">`r n_fail &lt;- sum(test_results$failed) + sum(test_results$error); if (n_fail == 0) sprintf("All %d tests pass, covering %d checks.", nrow(test_results), sum(test_results$nb)) else sprintf("%d of %d checks failed in this render, so the results below should not be trusted until they are fixed.", n_fail, sum(test_results$nb))`</span> They confirm that the threshold formula handles the exponential special case, that the hand-derived gradients match numerical estimates, that the transition matrix is a valid probability table and PageRank matches igraph, and that the drift metrics, AUC helper and simulator behave as expected. Because they run at every render, a broken function would show up here.</span>
+<span id="cb6-157"><a href="#cb6-157" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-158"><a href="#cb6-158" aria-hidden="true" tabindex="-1"></a><span class="fu">## Caching {#caching}</span></span>
+<span id="cb6-159"><a href="#cb6-159" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-160"><a href="#cb6-160" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Results cache (`results/*.rds`).** Written by <span class="in">`run_all.R`</span> and read by every page. Pages never recompute it, and the folder is not in git. Rerun <span class="in">`run_all.R`</span> after any change to <span class="in">`params.yaml`</span> or to a script in <span class="in">`R/`</span>. Nothing invalidates the cache automatically.</span>
+<span id="cb6-161"><a href="#cb6-161" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Quarto freeze (`_freeze/`).** <span class="in">`_quarto.yml`</span> sets <span class="in">`freeze: auto`</span>, so a full <span class="in">`quarto render`</span> re-executes a page only when that page's <span class="in">`.qmd`</span> file changes. Changes to <span class="in">`results/`</span> or the <span class="in">`R/`</span> scripts do not count. After rerunning <span class="in">`run_all.R`</span>, delete <span class="in">`_freeze/`</span> and render the whole site, or render each page explicitly (for example <span class="in">`quarto render evaluation.qmd`</span>), because Quarto always executes a page that is rendered on its own.</span>
+<span id="cb6-162"><a href="#cb6-162" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-163"><a href="#cb6-163" aria-hidden="true" tabindex="-1"></a><span class="fu">## Known limitations {#limitations}</span></span>
+<span id="cb6-164"><a href="#cb6-164" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-165"><a href="#cb6-165" aria-hidden="true" tabindex="-1"></a><span class="fu">### Limits of reproducibility {#repro-limits}</span></span>
+<span id="cb6-166"><a href="#cb6-166" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-167"><a href="#cb6-167" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Bit-for-bit equality is expected only on the same platform and package versions. Floating-point and BLAS differences across machines can change low-order digits, and with them the fingerprints in the <span class="co">[</span><span class="ot">Data</span><span class="co">](#data)</span> table, even when every reported figure is unchanged.</span>
+<span id="cb6-168"><a href="#cb6-168" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="in">`renv::restore()`</span> installs packages from CRAN. If a pinned version is removed from CRAN or its archive, or cannot be built on a newer R or operating system, the restore fails and the environment has to be rebuilt by hand.</span>
+<span id="cb6-169"><a href="#cb6-169" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>The fingerprints for results use <span class="in">`rlang::hash()`</span>, whose output can change between <span class="in">`rlang`</span> versions. Compare fingerprints only between runs with the same <span class="in">`rlang`</span> version.</span>
+<span id="cb6-170"><a href="#cb6-170" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Quarto versions affect rendering, not the numbers.</span>
+<span id="cb6-171"><a href="#cb6-171" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-172"><a href="#cb6-172" aria-hidden="true" tabindex="-1"></a><span class="fu">### Model limitations {#sec-limitations}</span></span>
+<span id="cb6-173"><a href="#cb6-173" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-174"><a href="#cb6-174" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>**Simulated data.** The latent factors, marginals, correlations, seasonality and host roles are all assumptions. Real telemetry has missing data, logging changes, holidays and populations of very different hosts.</span>
+<span id="cb6-175"><a href="#cb6-175" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>**Simulated attacks.** Each attack changes a few features in single windows or short runs. Real campaigns move across hosts and over days.</span>
+<span id="cb6-176"><a href="#cb6-176" aria-hidden="true" tabindex="-1"></a><span class="ss">3. </span>**Heavy, discrete tail.** Rare count features dominate extreme normal losses, so a single GPD fits poorly and the threshold depends on the chosen level $u$. Per-host or per-role thresholds, or separate models for count features, may change the picture.</span>
+<span id="cb6-177"><a href="#cb6-177" aria-hidden="true" tabindex="-1"></a><span class="ss">4. </span>**Fixed threshold.** $\tau_q$ is fitted once. Thresholds that adapt over time, by rolling refit or by time of day, are not implemented.</span>
+<span id="cb6-178"><a href="#cb6-178" aria-hidden="true" tabindex="-1"></a><span class="ss">5. </span>**Dependency graph.** The graph, call volumes and tier cut-offs are illustrative. The first-order Markov assumption is stated, not tested. See also the <span class="co">[</span><span class="ot">limitations of the graph layer</span><span class="co">](dependency-graph.qmd#limitations-of-this-layer)</span>.</span>
+<span id="cb6-179"><a href="#cb6-179" aria-hidden="true" tabindex="-1"></a><span class="ss">6. </span>**Prevalence.** The test set is about <span class="in">`r f_pct(n_attack_test / (n_attack_test + n_normal_test), 0)`</span> attacks. Real environments are orders of magnitude lower, which is why the <span class="co">[</span><span class="ot">base-rate table</span><span class="co">](evaluation.qmd#base-rates)</span> matters more than the ROC curve.</span>
+<span id="cb6-180"><a href="#cb6-180" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-181"><a href="#cb6-181" aria-hidden="true" tabindex="-1"></a>**What real data would replace each assumption.**</span>
+<span id="cb6-182"><a href="#cb6-182" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-183"><a href="#cb6-183" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Assumption <span class="pp">|</span> Where it is set <span class="pp">|</span> What would replace it <span class="pp">|</span></span>
+<span id="cb6-184"><a href="#cb6-184" aria-hidden="true" tabindex="-1"></a><span class="pp">|:----------------------|:----------------------|:--------------------------------------------|</span></span>
+<span id="cb6-185"><a href="#cb6-185" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Simulated telemetry <span class="pp">|</span> <span class="in">`R/sim.R`</span> <span class="pp">|</span> At least four weeks of host-by-window telemetry with an asset inventory <span class="pp">|</span></span>
+<span id="cb6-186"><a href="#cb6-186" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Simulated attacks <span class="pp">|</span> <span class="in">`params.yaml: attacks`</span> <span class="pp">|</span> Labelled red-team or incident data <span class="pp">|</span></span>
+<span id="cb6-187"><a href="#cb6-187" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Dependency graph and call volumes <span class="pp">|</span> <span class="in">`R/graph.R`</span>, <span class="in">`params.yaml: graph`</span> <span class="pp">|</span> Service-mesh call logs and session traces <span class="pp">|</span></span>
+<span id="cb6-188"><a href="#cb6-188" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-189"><a href="#cb6-189" aria-hidden="true" tabindex="-1"></a>**How to read the table.** Each row is one simulated input. The middle column says where it is defined in the code, and the last column names the real data that would take its place in a production version.</span>
+<span id="cb6-190"><a href="#cb6-190" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-191"><a href="#cb6-191" aria-hidden="true" tabindex="-1"></a>**What the table tells you.** Every result on this site rests on these three simulated inputs. None of them has been checked against real telemetry, real attacks or a real service graph, so the detection rates and tiers are evidence that the method works on data like the simulation, not evidence of how it would perform in a given environment.</span>
+<span id="cb6-192"><a href="#cb6-192" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-193"><a href="#cb6-193" aria-hidden="true" tabindex="-1"></a>**How to use the results.** Use them to compare methods, to see how the thresholds and the base rate interact, and as a template for validating a detector on real data. Do not use the detection rates, false-alarm rates or criticality tiers as estimates for a real environment, and do not use them to justify automated containment: at realistic attack rates most alerts at the 99.9% threshold would be false alarms.</span>
+<span id="cb6-194"><a href="#cb6-194" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-195"><a href="#cb6-195" aria-hidden="true" tabindex="-1"></a><span class="fu">## Licenses {#licenses}</span></span>
+<span id="cb6-196"><a href="#cb6-196" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-197"><a href="#cb6-197" aria-hidden="true" tabindex="-1"></a>The code on this site is released under the <span class="co">[</span><span class="ot">MIT License</span><span class="co">](license.qmd)</span>. There are no third-party data. Every data set is generated by the code in this repository and falls under the same license. The NIST AI Risk Management Framework and OSFI Guideline E-23 pages are cited by link only, and none of their content is redistributed. R packages keep their own licenses. They are installed through <span class="in">`renv`</span> from public repositories and are not redistributed here. Most are MIT-licensed; those with other terms are:</span>
+<span id="cb6-198"><a href="#cb6-198" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-199"><a href="#cb6-199" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Package <span class="pp">|</span> Used for <span class="pp">|</span> License <span class="pp">|</span></span>
+<span id="cb6-200"><a href="#cb6-200" aria-hidden="true" tabindex="-1"></a><span class="pp">|:----------------------|:----------------------|:----------------------|</span></span>
+<span id="cb6-201"><a href="#cb6-201" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`evd`</span> <span class="pp">|</span> Generalized Pareto fits for the EVT thresholds <span class="pp">|</span> <span class="co">[</span><span class="ot">GPL-3</span><span class="co">](https://cran.r-project.org/package=evd)</span> <span class="pp">|</span></span>
+<span id="cb6-202"><a href="#cb6-202" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`igraph`</span> <span class="pp">|</span> Service graph, PageRank, articulation points <span class="pp">|</span> <span class="co">[</span><span class="ot">GPL (&gt;= 2)</span><span class="co">](https://cran.r-project.org/package=igraph)</span> <span class="pp">|</span></span>
+<span id="cb6-203"><a href="#cb6-203" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`binom`</span> <span class="pp">|</span> Wilson confidence intervals on the Evaluation page <span class="pp">|</span> <span class="co">[</span><span class="ot">GPL</span><span class="co">](https://cran.r-project.org/package=binom)</span> <span class="pp">|</span></span>
+<span id="cb6-204"><a href="#cb6-204" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`future`</span> <span class="pp">|</span> Parallel backend for the 30-seed study <span class="pp">|</span> <span class="co">[</span><span class="ot">LGPL (&gt;= 2.1)</span><span class="co">](https://cran.r-project.org/package=future)</span> <span class="pp">|</span></span>
+<span id="cb6-205"><a href="#cb6-205" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`isotree`</span> <span class="pp">|</span> Isolation Forest baseline <span class="pp">|</span> <span class="co">[</span><span class="ot">BSD 2-clause</span><span class="co">](https://cran.r-project.org/package=isotree)</span> <span class="pp">|</span></span>
+<span id="cb6-206"><a href="#cb6-206" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`yaml`</span> <span class="pp">|</span> Reading <span class="in">`params.yaml`</span> <span class="pp">|</span> <span class="co">[</span><span class="ot">BSD 3-clause</span><span class="co">](https://cran.r-project.org/package=yaml)</span> <span class="pp">|</span></span>
+<span id="cb6-207"><a href="#cb6-207" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> <span class="in">`sessioninfo`</span> <span class="pp">|</span> Session information below <span class="pp">|</span> <span class="co">[</span><span class="ot">GPL-2</span><span class="co">](https://cran.r-project.org/package=sessioninfo)</span> <span class="pp">|</span></span>
+<span id="cb6-208"><a href="#cb6-208" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-209"><a href="#cb6-209" aria-hidden="true" tabindex="-1"></a><span class="fu">## Session information {#session-info}</span></span>
+<span id="cb6-210"><a href="#cb6-210" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-211"><a href="#cb6-211" aria-hidden="true" tabindex="-1"></a>The site was built with R and Quarto. The analysis loads <span class="in">`tidyverse`</span>, <span class="in">`gt`</span>, <span class="in">`patchwork`</span>, <span class="in">`scales`</span> and <span class="in">`ggraph`</span>, and also calls <span class="in">`recipes`</span>, <span class="in">`yardstick`</span>, <span class="in">`evd`</span>, <span class="in">`igraph`</span>, <span class="in">`isotree`</span>, <span class="in">`binom`</span>, <span class="in">`furrr`</span>, <span class="in">`future`</span>, <span class="in">`rlang`</span>, <span class="in">`yaml`</span>, <span class="in">`testthat`</span>, <span class="in">`renv`</span> and <span class="in">`sessioninfo`</span>. Package versions are pinned in <span class="in">`renv.lock`</span>; run <span class="in">`renv::restore()`</span> to install them.</span>
+<span id="cb6-212"><a href="#cb6-212" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-213"><a href="#cb6-213" aria-hidden="true" tabindex="-1"></a>::: {.callout-note icon="false" collapse="true"}</span>
+<span id="cb6-214"><a href="#cb6-214" aria-hidden="true" tabindex="-1"></a><span class="fu">## Full R session information</span></span>
+<span id="cb6-217"><a href="#cb6-217" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb6-218"><a href="#cb6-218" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: session-information</span></span>
+<span id="cb6-219"><a href="#cb6-219" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
+<span id="cb6-220"><a href="#cb6-220" aria-hidden="true" tabindex="-1"></a>sessioninfo<span class="sc">::</span><span class="fu">session_info</span>()</span>
+<span id="cb6-221"><a href="#cb6-221" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb6-222"><a href="#cb6-222" aria-hidden="true" tabindex="-1"></a>:::</span>
 </code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
