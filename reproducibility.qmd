@@ -1,39 +1,47 @@
 ---
 title: "Reproducibility"
-subtitle: "Cyber Anomaly Detection & Dependency Risk: how to rerun the analysis and check you got the same results"
+subtitle: "Cyber Anomaly Detection & Dependency Risk: how to rerun the analysis and where the results can mislead"
 ---
 
 ```{r}
 #| label: load
 #| include: false
+# setup.R sources every script in R/, including R/repro_env.R
 source("R/pages/setup.R")
 ```
 
-Every number on this site comes from a simulation defined in one parameter file, `params.yaml`, and run with explicit random seeds. Nothing is downloaded, and no external data are used. A single script, `run_all.R`, regenerates every result, and the pages only read and display those results. Package versions are pinned with `renv`. Rerunning the same commit with the restored packages should give identical numbers. The [fingerprints](#data) below let you check that.
+Every number on this site comes from a simulation defined in one parameter file, `params.yaml`, and run with explicit random seeds. Nothing is downloaded, and no external data are used. A single script, `run_all.R`, regenerates every result, and the pages only read and display those results. Package versions are pinned with `renv`. Rerunning the same commit with the restored packages should give identical numbers. The [fingerprints](#data) below let you check that. This page explains how to rebuild the site, records the environment it was built in, and states where the results can mislead.
 
 ## Quick start {#quick-start}
 
-1. Clone the repository and open the project folder in RStudio or Positron:
+The code is in the GitHub repository [patrick-lefler/high-dimensional-cyber-anomaly-detection](https://github.com/patrick-lefler/high-dimensional-cyber-anomaly-detection). To rebuild everything from a clean copy, run these commands from a terminal:
 
-    ``` bash
-    git clone https://github.com/patrick-lefler/high-dimensional-cyber-anomaly-detection.git
-    ```
+``` bash
+git clone https://github.com/patrick-lefler/high-dimensional-cyber-anomaly-detection
+cd high-dimensional-cyber-anomaly-detection
+Rscript -e 'renv::restore()'                         # once: install the package versions pinned in renv.lock
+Rscript run_all.R                                    # regenerate results/ (under a minute on a laptop)
+Rscript -e 'testthat::test_dir("tests/testthat")'    # optional: run the unit tests
+rm -rf _freeze && quarto render                      # render the site
+```
 
-2. Restore the pinned packages (see [Software environment](#environment)):
+The rendered site is written to `docs/`. The `results/` folder is not committed, so `run_all.R` must run before the first render. A page rendered without it stops with the message "Results missing: run `Rscript run_all.R` first." Deleting `_freeze/` makes Quarto re-execute every page against the new results (see [Caching](#caching)).
 
-    ``` r
-    renv::restore()
-    ```
+## Environment {#environment}
 
-3. Regenerate the results (under a minute on a laptop), run the tests, and render the site from the project root:
+```{r}
+#| label: tbl-env
+#| echo: false
+repro_env_table(packages = c("recipes", "evd", "isotree", "igraph", "yardstick")) |>
+  gt() |>
+  tab_header(title = md("**Software used to build this page**")) |>
+  cols_align(align = "left") |>
+  tab_options(table.font.size = 12)
+```
 
-    ``` bash
-    Rscript run_all.R
-    Rscript -e 'testthat::test_dir("tests/testthat")'
-    rm -rf _freeze && quarto render
-    ```
+**How to read the table.** Each row is one piece of software this page was built with and its version. The "Packages" row says whether the installed R packages match the versions pinned in `renv.lock`. The last five rows are the packages the results depend on most: `recipes` (preprocessing), `evd` (generalized Pareto fits for the thresholds), `isotree` (Isolation Forest baseline), `igraph` (service graph) and `yardstick` (evaluation metrics).
 
-The rendered site is written to `docs/`. The `results/` folder is not committed, so step 3 must run `run_all.R` before the first render. A page rendered without it stops with the message "Results missing: run `Rscript run_all.R` first."
+**What the table tells you.** If your versions match these and the packages are in sync, rebuilding the project should give the same numbers. If they differ, small differences in the results may come from the software rather than the analysis.
 
 ## Pipeline {#pipeline}
 
@@ -49,14 +57,15 @@ The rendered site is written to `docs/`. The `results/` folder is not committed,
 | `R/pipeline.R` | One full run for one seed: simulate, preprocess, train, fit threshold, evaluate | `run_pipeline()` |
 | `run_all.R` | Main run, gradient check, architecture sweep, bootstrap, calibration, declustering, attribution, drift demo, graph, and the 30-seed study | `results/*.rds` |
 | `R/pages/setup.R` | Sourced by every page: loads packages, project functions and cached results; sets theme, palettes and number formats | Shared page objects |
+| `R/repro_env.R` | Builds the environment table on this page | `repro_env_table()` |
 
 **How to read the table.** Each row is one file in the repository, listed in the order the analysis uses them. The middle column says what the file does in plain terms. The last column names the main functions or files it produces, so you can find where any number on the site was computed. Files in `R/` only define functions. `run_all.R` calls them, and the pages read what it saves.
 
 **What the table tells you.** The analysis has one entry point and one place for assumptions. Changing a parameter means editing `params.yaml`, rerunning `run_all.R` and re-rendering; no page computes anything that the script did not. Every page sources the same setup file, so all five analysis pages work from identical objects and cannot disagree with each other. The functions are small and individually tested, which makes each step straightforward to check or replace.
 
-## Data and result fingerprints {#data}
+## Data {#data}
 
-There are no input data files. All telemetry, attacks and the service graph are generated by `R/sim.R` and `R/graph.R` from the values in `params.yaml`. To replace the simulation with real data, see the [Limitations](index.qmd#limitations) on the Overview page.
+There are no input data files. All telemetry, attacks and the service graph are generated by `R/sim.R` and `R/graph.R` from the values in `params.yaml`. To replace the simulation with real data, see [Model limitations](#sec-limitations) below.
 
 Because the inputs are code and parameters, the useful check is on the outputs. The table fingerprints the parameter file and the key numeric results. File-level checksums of `results/main.rds` and `results/graph.rds` are not used: those files store a fitted recipe and an igraph object that carry session-specific environments and IDs, so their bytes change from run to run even when every number is identical.
 
@@ -77,15 +86,12 @@ fingerprints <- tibble(
 )
 fingerprints |>
   gt() |>
-  tab_header(
-    title = md("**Fingerprints of the inputs and results used in this render**"),
-    subtitle = paste0("Rendered ", Sys.Date())
-  ) |>
+  tab_header(title = md("**Fingerprints of the inputs and results used in this render**")) |>
   cols_align(align = "left") |>
   tab_options(table.font.size = 12)
 ```
 
-**How to read the table.** Each row is one input or result. The fingerprint is a short code computed from its exact contents. For the parameter file it is a standard MD5 checksum of the file. For results it is a hash of the numbers themselves, computed in R with `rlang::hash()`. Changing even one value produces a completely different code. The subtitle gives the date this page was rendered.
+**How to read the table.** Each row is one input or result. The fingerprint is a short code computed from its exact contents. For the parameter file it is a standard MD5 checksum of the file. For results it is a hash of the numbers themselves, computed in R with `rlang::hash()`. Changing even one value produces a completely different code.
 
 **What the table tells you.** Anyone who reruns `run_all.R` with the restored packages can compute the same fingerprints. If they all match, the rerun reproduced this site's numbers exactly. We checked this by running the pipeline repeatedly, including the parallel 30-seed study, and every fingerprint matched. A mismatch on `params.yaml` means the assumptions changed. A mismatch on results with the same parameters points to a different package version.
 
@@ -99,6 +105,17 @@ All assumptions live in `params.yaml`, each labelled as an assumption with its r
 - **Secondary analyses** in `run_all.R` (gradient check, architecture sweep, bootstrap, drift demo, routing) use fixed offsets from the main seed.
 
 `run_pipeline()` calls `set.seed()` with its own seed at the start, so each run draws the same random numbers whether the 30-seed study runs on one core or many. The page also re-derives the heatmap sample from the main seed, so the "random" incidents shown are the same in every render.
+
+::: {.callout-note icon="false" collapse="true"}
+## params.yaml
+
+```{r}
+#| label: params-yaml
+#| echo: false
+#| results: asis
+cat("```yaml\n", paste(readLines("params.yaml"), collapse = "\n"), "\n```\n", sep = "")
+```
+:::
 
 ## Tests {#tests}
 
@@ -119,7 +136,7 @@ test_results |>
   gt() |>
   tab_header(
     title = md("**Unit test results**"),
-    subtitle = sprintf("%d tests, %d checks, run %s", nrow(test_results), sum(test_results$nb), Sys.Date())
+    subtitle = sprintf("%d tests, %d checks", nrow(test_results), sum(test_results$nb))
   ) |>
   tab_options(table.font.size = 12)
 ```
@@ -133,15 +150,57 @@ test_results |>
 - **Results cache (`results/*.rds`).** Written by `run_all.R` and read by every page. Pages never recompute it, and the folder is not in git. Rerun `run_all.R` after any change to `params.yaml` or to a script in `R/`. Nothing invalidates the cache automatically.
 - **Quarto freeze (`_freeze/`).** `_quarto.yml` sets `freeze: auto`, so a full `quarto render` re-executes a page only when that page's `.qmd` file changes. Changes to `results/` or the `R/` scripts do not count. After rerunning `run_all.R`, delete `_freeze/` and render the whole site, or render each page explicitly (for example `quarto render evaluation.qmd`), because Quarto always executes a page that is rendered on its own.
 
+## Known limitations {#limitations}
+
+### Limits of reproducibility {#repro-limits}
+
+- Bit-for-bit equality is expected only on the same platform and package versions. Floating-point and BLAS differences across machines can change low-order digits, and with them the fingerprints in the [Data](#data) table, even when every reported figure is unchanged.
+- `renv::restore()` installs packages from CRAN. If a pinned version is removed from CRAN or its archive, or cannot be built on a newer R or operating system, the restore fails and the environment has to be rebuilt by hand.
+- The fingerprints for results use `rlang::hash()`, whose output can change between `rlang` versions. Compare fingerprints only between runs with the same `rlang` version.
+- Quarto versions affect rendering, not the numbers.
+
+### Model limitations {#sec-limitations}
+
+1. **Simulated data.** The latent factors, marginals, correlations, seasonality and host roles are all assumptions. Real telemetry has missing data, logging changes, holidays and populations of very different hosts.
+2. **Simulated attacks.** Each attack changes a few features in single windows or short runs. Real campaigns move across hosts and over days.
+3. **Heavy, discrete tail.** Rare count features dominate extreme normal losses, so a single GPD fits poorly and the threshold depends on the chosen level $u$. Per-host or per-role thresholds, or separate models for count features, may change the picture.
+4. **Fixed threshold.** $\tau_q$ is fitted once. Thresholds that adapt over time, by rolling refit or by time of day, are not implemented.
+5. **Dependency graph.** The graph, call volumes and tier cut-offs are illustrative. The first-order Markov assumption is stated, not tested. See also the [limitations of the graph layer](dependency-graph.qmd#limitations-of-this-layer).
+6. **Prevalence.** The test set is about `r f_pct(n_attack_test / (n_attack_test + n_normal_test), 0)` attacks. Real environments are orders of magnitude lower, which is why the [base-rate table](evaluation.qmd#base-rates) matters more than the ROC curve.
+
+**What real data would replace each assumption.**
+
+| Assumption | Where it is set | What would replace it |
+|:----------------------|:----------------------|:--------------------------------------------|
+| Simulated telemetry | `R/sim.R` | At least four weeks of host-by-window telemetry with an asset inventory |
+| Simulated attacks | `params.yaml: attacks` | Labelled red-team or incident data |
+| Dependency graph and call volumes | `R/graph.R`, `params.yaml: graph` | Service-mesh call logs and session traces |
+
+**How to read the table.** Each row is one simulated input. The middle column says where it is defined in the code, and the last column names the real data that would take its place in a production version.
+
+**What the table tells you.** Every result on this site rests on these three simulated inputs. None of them has been checked against real telemetry, real attacks or a real service graph, so the detection rates and tiers are evidence that the method works on data like the simulation, not evidence of how it would perform in a given environment.
+
+**How to use the results.** Use them to compare methods, to see how the thresholds and the base rate interact, and as a template for validating a detector on real data. Do not use the detection rates, false-alarm rates or criticality tiers as estimates for a real environment, and do not use them to justify automated containment: at realistic attack rates most alerts at the 99.9% threshold would be false alarms.
+
 ## Licenses {#licenses}
 
-The code on this site is released under the [MIT License](license.qmd). There are no third-party data. Every data set is generated by the code in this repository and falls under the same license. The NIST AI Risk Management Framework and OSFI Guideline E-23 pages are cited by link only, and none of their content is redistributed. R packages keep their own licenses. They are installed through `renv` from public repositories and are not redistributed here.
+The code on this site is released under the [MIT License](license.qmd). There are no third-party data. Every data set is generated by the code in this repository and falls under the same license. The NIST AI Risk Management Framework and OSFI Guideline E-23 pages are cited by link only, and none of their content is redistributed. R packages keep their own licenses. They are installed through `renv` from public repositories and are not redistributed here. Most are MIT-licensed; those with other terms are:
 
-## Software environment {#environment}
+| Package | Used for | License |
+|:----------------------|:----------------------|:----------------------|
+| `evd` | Generalized Pareto fits for the EVT thresholds | [GPL-3](https://cran.r-project.org/package=evd) |
+| `igraph` | Service graph, PageRank, articulation points | [GPL (>= 2)](https://cran.r-project.org/package=igraph) |
+| `binom` | Wilson confidence intervals on the Evaluation page | [GPL](https://cran.r-project.org/package=binom) |
+| `future` | Parallel backend for the 30-seed study | [LGPL (>= 2.1)](https://cran.r-project.org/package=future) |
+| `isotree` | Isolation Forest baseline | [BSD 2-clause](https://cran.r-project.org/package=isotree) |
+| `yaml` | Reading `params.yaml` | [BSD 3-clause](https://cran.r-project.org/package=yaml) |
+| `sessioninfo` | Session information below | [GPL-2](https://cran.r-project.org/package=sessioninfo) |
 
-The site was built with R and Quarto. The analysis loads `tidyverse`, `gt`, `patchwork`, `scales` and `ggraph`, and also calls `recipes`, `yardstick`, `evd`, `igraph`, `isotree`, `binom`, `furrr`, `future`, `rlang`, `yaml`, `testthat` and `sessioninfo`. Package versions are pinned in `renv.lock`; run `renv::restore()` to install them.
+## Session information {#session-info}
 
-::: {.callout-note icon=false collapse="true"}
+The site was built with R and Quarto. The analysis loads `tidyverse`, `gt`, `patchwork`, `scales` and `ggraph`, and also calls `recipes`, `yardstick`, `evd`, `igraph`, `isotree`, `binom`, `furrr`, `future`, `rlang`, `yaml`, `testthat`, `renv` and `sessioninfo`. Package versions are pinned in `renv.lock`; run `renv::restore()` to install them.
+
+::: {.callout-note icon="false" collapse="true"}
 ## Full R session information
 ```{r}
 #| label: session-information

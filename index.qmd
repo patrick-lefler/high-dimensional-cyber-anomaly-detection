@@ -119,14 +119,7 @@ We recommend three governance practices:
 
 ## Limitations
 
-What would change the conclusions:
-
-- **Simulated data.** The latent factors, marginals, correlations, seasonality and host roles are all assumptions. Real telemetry has missing data, logging changes, holidays and populations of very different hosts. Client data would replace the generator in `R/sim.R`: at least four weeks of host-by-window telemetry with an asset inventory.
-- **Simulated attacks.** Each attack changes a few features in single windows or short runs. Real campaigns move across hosts and over days. Labelled red-team or incident data would replace `params.yaml: attacks`.
-- **Heavy, discrete tail.** Rare count features dominate extreme normal losses, so a single GPD fits poorly and the threshold depends on the chosen level $u$. Per-host or per-role thresholds, or separate models for count features, may change the picture.
-- **Fixed threshold.** $\tau_q$ is fitted once. Thresholds that adapt over time, by rolling refit or by time of day, are not implemented.
-- **Dependency graph.** The graph, call volumes and tier cut-offs are illustrative. The first-order Markov assumption is stated, not tested. Service-mesh call logs and session traces would replace them.
-- **Prevalence.** The test set is about `r f_pct(n_attack_test / (n_attack_test + n_normal_test), 0)` attacks. Real environments are orders of magnitude lower, which is why the base-rate table matters more than the ROC curve.
+All telemetry, attacks and the service graph are simulated, so the results show how the method behaves on data like the simulation, not how it would perform in a real environment. The threshold is fitted once to a heavy, discrete tail, and the test set has about `r f_pct(n_attack_test / (n_attack_test + n_normal_test), 0)` attacks, far more than real environments, which is why the [base-rate table](evaluation.qmd#base-rates) matters more than the ROC curve. The [Model limitations](reproducibility.qmd#sec-limitations) section lists each limitation, the real data that would replace each assumption, and how the results should and should not be used.
 
 ## Reproducibility
 
